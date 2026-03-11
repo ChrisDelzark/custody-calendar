@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Custody Calendar — Wilkinson v. Wilkinson</title>
+
+<!-- PWA Meta Tags -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2AB5B3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Custody Cal">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<style>
+:root {
+  --chris: #2AB5B3;
+  --jenny: #E8598B;
+  --chris-bg: #E0F5F4;
+  --jenny-bg: #FDE4ED;
+  --school-on: #34C759;
+  --school-off: #D1D1D6;
+  --gray100: #F5F5F7;
+  --gray200: #E5E5EA;
+  --gray300: #D1D1D6;
+  --gray500: #8E8E93;
+  --gray700: #48484A;
+  --gray900: #1C1C1E;
+  --today-ring: #FF9500;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: #FAFAFA; color: var(--gray900);
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  /* Safe area for notch / dynamic island */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.header {
+  position: sticky; top: 0; z-index: 100;
+  width: 100%;
+  background: rgba(250,250,250,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--gray200);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 8px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; flex-wrap: wrap;
+}
+.header h1 { font-size: 17px; font-weight: 700; white-space: nowrap; }
+.header-controls { display: flex; align-items: center; gap: 4px; }
+.today-btn { font-size: 15px; color: var(--chris); background: none; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; border-radius: 8px; }
+.today-btn:active { background: var(--gray100); }
+.zoom-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--gray200); background: #fff; font-size: 16px; font-weight: 600; color: var(--gray700); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.zoom-btn:active { background: var(--gray100); }
+.zoom-level { font-size: 11px; color: var(--gray500); min-width: 32px; text-align: center; }
+.legend { display: flex; gap: 8px; font-size: 11px; color: var(--gray500); flex-wrap: nowrap; flex-shrink: 0; }
+.legend-item { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dow-row {
+  display: grid; grid-template-columns: repeat(126, 1fr);
+  text-align: center; font-size: 11px; font-weight: 600; color: var(--gray500);
+  padding: 8px 0 6px;
+  background: rgba(250,250,250,0.95);
+  position: sticky; z-index: 99;
+  backdrop-filter: blur(20px); border-bottom: 0.5px solid var(--gray200);
+}
+#zoomWrap { transition: zoom 0.2s ease; }
+.calendar-body { padding: 0 0 100px; }
+.month-label {
+  font-size: 22px; font-weight: 700;
+  padding: 20px 16px 10px;
+  position: sticky;
+  background: rgba(250,250,250,0.97);
+  backdrop-filter: blur(10px);
+  z-index: 50;
+}
+
+/* ── WEEK ROW: 5 explicit grid rows ── */
+.week-row {
+  display: grid;
+  grid-template-columns: repeat(126, 1fr);
+  grid-template-rows: auto 22px 2px 22px; /* row 1: date+dots, row 2: Luther, row 3: gap, row 4: Elliot — additional rows auto-expand for overlay bars */
+  gap: 0;
+  padding-bottom: 4px;
+  border-bottom: 0.5px solid var(--gray100);
+  position: relative;
+}
+.day-div {
+  grid-row: 1 / -1;
+  width: 0;
+  border-left: 0.5px solid var(--gray200);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Day cells occupy row 1 only */
+.day-cell {
+  grid-row: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 0 4px;
+}
+.day-num {
+  font-size: 16px; font-weight: 400;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; margin-bottom: 3px;
+}
+.day-cell.today .day-num { background: var(--today-ring); color: #fff; font-weight: 700; }
+.day-cell.other-month { opacity: 0.2; }
+.school-dots { display: flex; gap: 3px; }
+.school-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--school-off); display: flex; align-items: center; justify-content: center; }
+.school-dot.in-session { background: var(--school-on); box-shadow: 0 0 3px rgba(52,199,89,0.5); }
+.school-dot-label { font-size: 5.5px; font-weight: 800; color: rgba(255,255,255,0.9); line-height: 1; }
+.school-dot:not(.in-session) .school-dot-label { color: rgba(0,0,0,0.3); }
+
+/* ── CUSTODY BARS: continuous multi-day spans ── */
+.cbar {
+  height: 20px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+  z-index: 2;
+}
+.cbar.luther { grid-row: 2; }
+.cbar.elliot { grid-row: 4; }
+.cbar.chris { background: var(--chris); }
+.cbar.jenny { background: var(--jenny); }
+.cbar.swap-jenny { background: #C2185B; }
+.cbar.swap-chris { background: #1A8A88; }
+
+/* Rounding only on true start/end caps */
+.cbar.cap-left { border-top-left-radius: 6px; border-bottom-left-radius: 6px; margin-left: 3px; }
+.cbar.cap-right { border-top-right-radius: 6px; border-bottom-right-radius: 6px; margin-right: 3px; }
+
+/* Name label centered */
+.cbar .bar-name {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  pointer-events: none;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Pickup time at left cap */
+.cbar .bar-pickup {
+  position: absolute;
+  left: 8px;
+  font-size: 7.5px;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+.cbar .bar-pickup-end {
+  position: absolute;
+  right: 8px;
+  font-size: 7.5px;
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* ── HOLIDAY BAR: dynamic rows (styled like event bars with hover tooltip) ── */
+.hbar {
+  height: 14px;
+  border-radius: 6px;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  cursor: pointer;
+}
+.hbar.chris { background: var(--chris); }
+.hbar.jenny { background: var(--jenny); }
+.hbar.cap-left { border-top-left-radius: 6px; border-bottom-left-radius: 6px; margin-left: 3px; }
+.hbar.cap-right { border-top-right-radius: 6px; border-bottom-right-radius: 6px; margin-right: 3px; }
+.hbar-label { font-size: 7px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-shadow: 0 0.5px 1px rgba(0,0,0,0.3); }
+/* Holiday glassmorphism hover tooltip */
+.hbar .hbar-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  padding: 12px 16px;
+  min-width: 210px;
+  max-width: 300px;
+  z-index: 200;
+  pointer-events: none;
+  white-space: normal;
+}
+.hbar:hover .hbar-tooltip { display: block; }
+.hbar-tooltip .ht-name { font-size: 13px; font-weight: 700; color: var(--gray900); line-height: 1.3; }
+.hbar-tooltip .ht-range { font-size: 11px; color: var(--gray700); margin-top: 4px; }
+.hbar-tooltip .ht-parent { font-size: 11px; font-weight: 600; margin-top: 6px; padding: 2px 10px; border-radius: 10px; display: inline-block; }
+.hbar-tooltip .ht-parent.chris { background: rgba(42,181,179,0.15); color: var(--chris); }
+.hbar-tooltip .ht-parent.jenny { background: rgba(232,89,139,0.15); color: var(--jenny); }
+
+/* ── EVENT BAR: dynamic rows (overlay) ── */
+.ebar {
+  height: 14px;
+  border-radius: 6px;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ebar.pending { background: #FF9500; opacity: 0.8; }
+.ebar.chris { background: var(--chris); opacity: 0.8; }
+.ebar.jenny { background: var(--jenny); opacity: 0.8; }
+.ebar.swap { background: #C2185B; opacity: 0.85; }
+.ebar.cap-left { border-top-left-radius: 6px; border-bottom-left-radius: 6px; margin-left: 3px; }
+.ebar.cap-right { border-top-right-radius: 6px; border-bottom-right-radius: 6px; margin-right: 3px; }
+.ebar-label { font-size: 7px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; }
+
+/* HOLIDAY DETAIL CARDS — removed (now in hover tooltips) */
+
+/* EVENT DETAIL CARDS */
+.event-detail {
+  display: flex; align-items: flex-start;
+  padding: 10px 16px; gap: 10px;
+  border-bottom: 0.5px solid var(--gray200); background: #FFFBF0;
+}
+.ed-color { width: 4px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 44px; }
+.ed-color.pending { background: #FF9500; }
+.ed-color.chris { background: var(--chris); }
+.ed-color.jenny { background: var(--jenny); }
+.ed-color.swap { background: #C2185B; }
+.ed-body { flex: 1; }
+.ed-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.ed-range { font-size: 13px; color: var(--gray500); margin-top: 2px; }
+.ed-status { font-size: 11px; font-weight: 600; margin-top: 4px; padding: 2px 10px; border-radius: 10px; display: inline-block; }
+.ed-status.pending { background: #FFF3E0; color: #FF9500; }
+.ed-status.chris { background: var(--chris-bg); color: var(--chris); }
+.ed-status.jenny { background: var(--jenny-bg); color: var(--jenny); }
+.ed-status.swap { background: #FCE4EC; color: #C2185B; }
+
+@media (min-width: 768px) {
+  .calendar-body { max-width: 900px; margin: 0 auto; }
+  .dow-row { max-width: 900px; margin: 0 auto; }
+}
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media (max-width: 767px) {
+  /* Header: stack vertically */
+  .header {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px 6px;
+  }
+  .header h1 { font-size: 15px; }
+
+  /* Legend: wrap into 2 rows, smaller text */
+  .legend {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 10px;
+    font-size: 10px;
+  }
+
+  /* Zoom controls: larger touch targets */
+  .zoom-btn { width: 36px; height: 36px; font-size: 20px; }
+  .today-btn { font-size: 14px; padding: 8px 14px; }
+  .header-controls { gap: 8px; }
+
+  /* Day-of-week row */
+  .dow-row { font-size: 10px; padding: 6px 0 4px; }
+
+  /* Month labels */
+  .month-label { font-size: 18px; padding: 14px 12px 8px; }
+
+  /* Day cells: smaller date numbers, larger touch area */
+  .day-num { font-size: 13px; width: 26px; height: 26px; }
+  .day-cell { padding: 4px 0 2px; }
+
+  /* School dots slightly smaller */
+  .school-dot { width: 7px; height: 7px; }
+  .school-dot-label { font-size: 5px; }
+
+  /* Custody bars: keep readable */
+  .cbar { height: 18px; }
+  .cbar .bar-name { font-size: 8px; }
+  .cbar .bar-pickup, .cbar .bar-pickup-end { font-size: 6.5px; }
+
+  /* Holiday + event bars: slightly taller for tap targets */
+  .hbar { height: 16px; min-height: 16px; }
+  .hbar-label { font-size: 6.5px; }
+  .ebar { height: 16px; min-height: 16px; }
+  .ebar-label { font-size: 6.5px; }
+
+  /* Holiday tooltip: position from left edge on mobile to stay in viewport */
+  .hbar .hbar-tooltip {
+    left: 0;
+    transform: none;
+    min-width: 180px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 12px;
+  }
+  .hbar-tooltip .ht-name { font-size: 14px; }
+  .hbar-tooltip .ht-range { font-size: 12px; }
+  .hbar-tooltip .ht-parent { font-size: 12px; }
+
+  /* Event detail cards: mobile-friendly */
+  .event-detail { padding: 8px 12px; }
+  .ed-name { font-size: 14px; }
+  .ed-range { font-size: 12px; }
+  .ed-status { font-size: 10px; }
+}
+
+/* ── TOUCH / TAP TOOLTIP SUPPORT ── */
+.hbar.tooltip-active .hbar-tooltip { display: block; }
+
+/* Dismiss overlay: invisible full-screen layer behind active tooltip */
+.tooltip-backdrop {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 199;
+}
+.tooltip-backdrop.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="tooltip-backdrop" id="tooltipBackdrop"></div>
+<div class="header">
+  <h1>Custody Calendar</h1>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--chris)"></div>Chris</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--jenny)"></div>Jenny</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--school-on)"></div>In School</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--school-off)"></div>No School</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#FF9500"></div>Pending</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--chris)"></div>Chris Event</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--jenny)"></div>Jenny Event</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#C2185B"></div>Accepted Swap</div>
+  </div>
+  <div class="header-controls">
+    <button class="zoom-btn" onclick="zoomOut()" aria-label="Zoom out">&minus;</button>
+    <span class="zoom-level" id="zoomLabel">100%</span>
+    <button class="zoom-btn" onclick="zoomIn()" aria-label="Zoom in">+</button>
+    <button class="today-btn" onclick="scrollToToday()">Today</button>
+  </div>
+</div>
+
+<div class="dow-row">
+  <div style="grid-column:1/19;text-align:center">S</div>
+  <div style="grid-column:19/37;text-align:center">M</div>
+  <div style="grid-column:37/55;text-align:center">T</div>
+  <div style="grid-column:55/73;text-align:center">W</div>
+  <div style="grid-column:73/91;text-align:center">T</div>
+  <div style="grid-column:91/109;text-align:center">F</div>
+  <div style="grid-column:109/127;text-align:center">S</div>
+</div>
+
+<div id="zoomWrap">
+  <div class="calendar-body" id="calBody"></div>
+</div>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SCHOOL EVENTS DATA (from school_events table)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SCHOOL_EVENTS = [{"c":"L","t":"HOLIDAY","n":"Independence Day","s":"2025-07-04","ns":1},{"c":"E","t":"HOLIDAY","n":"Independence Day","s":"2025-07-04","ns":1},{"c":"L","t":"FIRST_DAY","n":"First Day of School","s":"2025-08-11"},{"c":"E","t":"FIRST_DAY","n":"First Day of School","s":"2025-08-12"},{"c":"L","t":"HOLIDAY","n":"Labor Day","s":"2025-09-01","ns":1},{"c":"E","t":"HOLIDAY","n":"Labor Day","s":"2025-09-01","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2025-10-15"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2025-10-15"},{"c":"L","t":"BREAK","n":"Fall Break / Staff Development","s":"2025-10-16","e":"2025-10-20","ns":1},{"c":"E","t":"BREAK","n":"Fall Break / Staff Development","s":"2025-10-16","e":"2025-10-20","ns":1},{"c":"E","t":"BREAK","n":"Thanksgiving Break","s":"2025-11-24","e":"2025-11-28","ns":1},{"c":"L","t":"BREAK","n":"Thanksgiving Break","s":"2025-11-25","e":"2025-11-28","ns":1},{"c":"L","t":"BREAK","n":"Winter Break","s":"2025-12-19","e":"2026-01-05","ns":1},{"c":"E","t":"BREAK","n":"Winter Break","s":"2025-12-19","e":"2026-01-05","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Virtual Teacher Workday","s":"2026-01-05","ns":1},{"c":"L","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2026-01-19","ns":1},{"c":"E","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2026-01-19","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2026-02-12"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2026-02-12"},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2026-02-13"},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2026-02-13","ns":1},{"c":"L","t":"HOLIDAY","n":"Presidents Day","s":"2026-02-16","ns":1},{"c":"E","t":"HOLIDAY","n":"Presidents Day","s":"2026-02-16","ns":1},{"c":"L","t":"BREAK","n":"Spring Break","s":"2026-03-23","e":"2026-03-26","ns":1},{"c":"E","t":"BREAK","n":"Spring Break","s":"2026-03-23","e":"2026-03-27","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2026-04-17","ns":1},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2026-04-17","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Day of School","s":"2026-05-21"},{"c":"E","t":"LAST_DAY","n":"Last Day of School","s":"2026-05-22"},{"c":"L","t":"HOLIDAY","n":"Memorial Day","s":"2026-05-25","ns":1},{"c":"E","t":"HOLIDAY","n":"Memorial Day","s":"2026-05-25","ns":1},{"c":"E","t":"HOLIDAY","n":"Independence Day","s":"2026-07-04","ns":1},{"c":"L","t":"FIRST_DAY","n":"First Day of School","s":"2026-08-11"},{"c":"E","t":"FIRST_DAY","n":"First Day of School","s":"2026-08-11"},{"c":"L","t":"HOLIDAY","n":"Labor Day","s":"2026-09-07","ns":1},{"c":"E","t":"HOLIDAY","n":"Labor Day","s":"2026-09-07","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2026-10-14"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2026-10-14"},{"c":"L","t":"BREAK","n":"Fall Break / Staff Development","s":"2026-10-15","e":"2026-10-16","ns":1},{"c":"E","t":"BREAK","n":"Fall Break / Staff Development","s":"2026-10-15","e":"2026-10-19","ns":1},{"c":"L","t":"BREAK","n":"Thanksgiving Break","s":"2026-11-23","e":"2026-11-27","ns":1},{"c":"E","t":"BREAK","n":"Thanksgiving Break","s":"2026-11-23","e":"2026-11-27","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Student Day (Winter)","s":"2026-12-18"},{"c":"E","t":"BREAK","n":"Winter Break","s":"2026-12-18","e":"2027-01-04","ns":1},{"c":"L","t":"BREAK","n":"Winter Break","s":"2026-12-21","e":"2027-01-03","ns":1},{"c":"L","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2027-01-18","ns":1},{"c":"E","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2027-01-18","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2027-02-11"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2027-02-11"},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2027-02-12"},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2027-02-12","ns":1},{"c":"L","t":"HOLIDAY","n":"Presidents Day","s":"2027-02-15","ns":1},{"c":"E","t":"HOLIDAY","n":"Presidents Day","s":"2027-02-15","ns":1},{"c":"L","t":"BREAK","n":"Spring Break","s":"2027-03-22","e":"2027-03-26","ns":1},{"c":"E","t":"BREAK","n":"Spring Break","s":"2027-03-22","e":"2027-03-26","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2027-04-16","ns":1},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2027-04-16","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Day of School","s":"2027-05-21"},{"c":"E","t":"LAST_DAY","n":"Last Day of School","s":"2027-05-21"},{"c":"L","t":"HOLIDAY","n":"Memorial Day","s":"2027-05-31","ns":1},{"c":"E","t":"HOLIDAY","n":"Memorial Day","s":"2027-05-31","ns":1}];
+
+// Swap days override — agreed custody exchanges
+// key: "YYYY-MM-DD|L" or "YYYY-MM-DD|E", value: {p:"C"or"J", orig:"C"or"J", notes:"..."}
+const SWAP_DAYS = {
+  "2026-05-29|L": {p:"J", orig:"C", notes:"Family Wedding (Jenny's request, accepted)"},
+  "2026-05-30|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-05-31|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-01|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-02|L": {p:"J", orig:"C", notes:"Family Wedding"}
+};
+
+// Requested events (overlay calendar)
+const EVENTS = [
+  {"name":"Luther: Orthodontist","startDate":"2026-05-05","endDate":"2026-05-05","status":"chris","requestedBy":"C","children":"Luther","note":"Shared in chat at 4:24 PM on 2026-03-10","time":"12:00 PM – 1:00 PM","type":"APPOINTMENT"},
+  {"name":"Swap: Family Wedding (Luther)","startDate":"2026-05-29","endDate":"2026-06-02","status":"swap","requestedBy":"J","children":"Luther (Elliot missing — disputed)","note":"Accepted 2026-03-11. Jenny requested for both boys but only Luther listed in AppClose. Chris flagged 2026-03-10.","type":"SWAP"},
+  {"name":"New Life Ranch Summer Camp","startDate":"2026-06-07","endDate":"2026-06-13","status":"pending","requestedBy":"C","children":"Both","note":"Chris offered to cover full cost. Awaiting Jenny's confirmation.","type":"CAMP"},
+  {"name":"Dentist Appointment","startDate":"2026-11-03","endDate":"2026-11-03","status":"chris","requestedBy":"C","children":"Both","note":"Shared in chat at 7:33 AM on 2026-03-06","time":"3:30 PM – 4:30 PM","type":"APPOINTMENT"}
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CUSTODY FORMULA ENGINE
+// Port of custody.py — computes custody for any date
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const DECREE_START = new Date(2025, 4, 9); // May 9, 2025
+const DECREE_START_PARENT = 'J';
+
+function dk(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function parseD(s) { const p = s.split('-'); return new Date(parseInt(p[0]), parseInt(p[1])-1, parseInt(p[2])); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+
+function nthWeekday(year, month, weekday, n) {
+  if (n > 0) {
+    const first = new Date(year, month, 1);
+    const offset = (weekday - first.getDay() + 7) % 7;
+    return new Date(year, month, 1 + offset + 7 * (n - 1));
+  } else {
+    const last = new Date(year, month + 1, 0);
+    const offset = (last.getDay() - weekday + 7) % 7;
+    return new Date(year, month + 1, -offset);
+  }
+}
+
+function fridayBefore(d) {
+  const off = (d.getDay() - 5 + 7) % 7;
+  return addDays(d, -off);
+}
+
+function sundayAfter(d) {
+  const off = (7 - d.getDay()) % 7;
+  return addDays(d, off);
+}
+
+function easter(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100), c = year % 100;
+  const d = Math.floor(b / 4), e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function alternates(baseYear, baseParent, queryYear) {
+  return (queryYear - baseYear) % 2 === 0 ? baseParent : (baseParent === 'J' ? 'C' : 'J');
+}
+
+// School calendar lookup
+function getBreak(child, breakName, year) {
+  const bn = breakName.toLowerCase();
+  for (const e of SCHOOL_EVENTS) {
+    if (e.c !== child) continue;
+    if (e.t !== 'BREAK') continue;
+    if (!e.n.toLowerCase().includes(bn)) continue;
+    const sd = parseD(e.s);
+    if (sd.getFullYear() === year || (bn === 'winter' && sd.getFullYear() === year)) {
+      return { start: sd, end: e.e ? parseD(e.e) : sd };
+    }
+  }
+  return null;
+}
+
+function schoolReleaseBefore(child, breakName, year) {
+  const brk = getBreak(child, breakName, year);
+  if (!brk) return null;
+  let d = addDays(brk.start, -1);
+  while (d.getDay() === 0 || d.getDay() === 6) d = addDays(d, -1);
+  return d;
+}
+
+function isSchoolDay(child, d) {
+  if (d.getDay() === 0 || d.getDay() === 6) return false;
+  const ds = dk(d);
+  for (const e of SCHOOL_EVENTS) {
+    if (e.c !== child) continue;
+    if (!e.ns) continue;
+    const es = e.s;
+    const ee = e.e || e.s;
+    if (ds >= es && ds <= ee) return false;
+  }
+  // Check if within school year
+  let firstDay = null, lastDay = null;
+  for (const e of SCHOOL_EVENTS) {
+    if (e.c !== child) continue;
+    if (e.t === 'FIRST_DAY') {
+      const fd = parseD(e.s);
+      if (fd <= d && (!firstDay || fd > firstDay)) firstDay = fd;
+    }
+    if (e.t === 'LAST_DAY') {
+      const ld = parseD(e.s);
+      if (ld >= d && (!lastDay || ld < lastDay)) lastDay = ld;
+    }
+  }
+  if (!firstDay || !lastDay) return false;
+  return d >= firstDay && d <= lastDay;
+}
+
+// Compute all holiday windows for a child in a year
+function computeHolidays(child, year) {
+  const holidays = [];
+
+  // LABOR DAY
+  const laborDay = nthWeekday(year, 8, 1, 1);
+  const laborParent = alternates(2025, 'J', year);
+  const laborStart = fridayBefore(laborDay);
+  holidays.push({ h: 'LABOR_DAY', p: laborParent, s: laborStart, e: laborDay, note: 'Labor Day Holiday' });
+
+  // HALLOWEEN
+  const halloween = new Date(year, 9, 31);
+  holidays.push({ h: 'HALLOWEEN', p: alternates(2025, 'J', year), s: halloween, e: halloween, note: 'Halloween' });
+
+  // THANKSGIVING
+  const thanksgiving = nthWeekday(year, 10, 4, 4);
+  const thanksParent = alternates(2025, 'C', year);
+  const thanksBreak = getBreak(child, 'Thanksgiving', year);
+  let tStart, tEnd;
+  if (thanksBreak) {
+    tStart = schoolReleaseBefore(child, 'Thanksgiving', year) || fridayBefore(thanksBreak.start);
+    tEnd = sundayAfter(thanksBreak.end);
+  } else {
+    tStart = addDays(thanksgiving, -5);
+    tEnd = addDays(thanksgiving, 3);
+  }
+  holidays.push({ h: 'THANKSGIVING', p: thanksParent, s: tStart, e: tEnd, note: 'Thanksgiving Holiday' });
+
+  // CHRISTMAS FIRST HALF
+  const xmasFirstParent = alternates(2025, 'J', year);
+  const winter = getBreak(child, 'Winter', year);
+  let xmasStart;
+  if (winter) {
+    xmasStart = schoolReleaseBefore(child, 'Winter', year);
+    if (!xmasStart) xmasStart = addDays(winter.start, -1);
+  } else {
+    xmasStart = new Date(year, 11, 18);
+  }
+  const xmasSplit = new Date(year, 11, 27);
+  holidays.push({ h: 'CHRISTMAS_1ST', p: xmasFirstParent, s: xmasStart, e: addDays(xmasSplit, -1), note: 'Christmas \u2014 First Half' });
+
+  // CHRISTMAS SECOND HALF
+  const xmasSecondParent = xmasFirstParent === 'J' ? 'C' : 'J';
+  const xmasEnd = winter ? winter.end : new Date(year + 1, 0, 5);
+  holidays.push({ h: 'CHRISTMAS_2ND', p: xmasSecondParent, s: xmasSplit, e: xmasEnd, note: 'Christmas \u2014 Second Half' });
+
+  // SPRING BREAK
+  const spring = getBreak(child, 'Spring', year);
+  if (spring) {
+    const springParent = alternates(2026, 'C', year);
+    const springStart = schoolReleaseBefore(child, 'Spring', year) || fridayBefore(spring.start);
+    const springEnd = sundayAfter(spring.end);
+    holidays.push({ h: 'SPRING_BREAK', p: springParent, s: springStart, e: springEnd, note: 'Spring Break' });
+  }
+
+  // EASTER
+  const easterSun = easter(year);
+  const goodFriday = addDays(easterSun, -2);
+  holidays.push({ h: 'EASTER', p: alternates(2026, 'J', year), s: goodFriday, e: easterSun, note: 'Easter Weekend' });
+
+  // MOTHER'S DAY (always Jenny)
+  const mothersDay = nthWeekday(year, 4, 0, 2);
+  holidays.push({ h: "MOTHERS_DAY", p: 'J', s: fridayBefore(mothersDay), e: mothersDay, note: "Mother's Day Weekend" });
+
+  // FATHER'S DAY (always Chris)
+  const fathersDay = nthWeekday(year, 5, 0, 3);
+  holidays.push({ h: "FATHERS_DAY", p: 'C', s: fridayBefore(fathersDay), e: fathersDay, note: "Father's Day Weekend" });
+
+  // MEMORIAL DAY
+  const memorial = nthWeekday(year, 4, 1, -1);
+  holidays.push({ h: 'MEMORIAL_DAY', p: alternates(2026, 'C', year), s: fridayBefore(memorial), e: memorial, note: 'Memorial Day Holiday' });
+
+  // JULY 4
+  const july4 = new Date(year, 6, 4);
+  holidays.push({ h: 'JULY_4', p: alternates(2026, 'J', year), s: july4, e: july4, note: 'Independence Day' });
+
+  return holidays;
+}
+
+// Holiday cache
+const _hcache = {};
+function getHolidays(child, year) {
+  const key = child + year;
+  if (!_hcache[key]) _hcache[key] = computeHolidays(child, year);
+  return _hcache[key];
+}
+
+// Base week
+function baseWeekParent(d) {
+  const days = daysBetween(DECREE_START, d);
+  if (days < 0) return 'C';
+  const week = Math.floor(days / 7);
+  return week % 2 === 0 ? DECREE_START_PARENT : (DECREE_START_PARENT === 'J' ? 'C' : 'J');
+}
+
+// Main custody lookup
+function getCustody(dateStr, child) {
+  const d = parseD(dateStr);
+
+  // 1. Swap override
+  const swapKey = dateStr + '|' + child;
+  if (SWAP_DAYS[swapKey]) {
+    return { p: SWAP_DAYS[swapKey].p, r: 'SWAP', h: null, note: SWAP_DAYS[swapKey].notes || 'Swap day', orig: SWAP_DAYS[swapKey].orig };
+  }
+
+  // 2. Holiday override
+  const yr = d.getFullYear();
+  for (const y of [yr, yr - 1]) {
+    for (const hol of getHolidays(child, y)) {
+      if (d >= hol.s && d <= hol.e) {
+        return { p: hol.p, r: 'HOLIDAY_OVERRIDE', h: hol.h, note: hol.note };
+      }
+    }
+  }
+
+  // 3. Base week
+  const p = baseWeekParent(d);
+  return { p: p, r: 'BASE_WEEK', h: null, note: (p === 'C' ? "Chris" : "Jenny") + "'s week" };
+}
+
+// Exchange time
+function getExchange(dateStr, child) {
+  const d = parseD(dateStr);
+  const custody = getCustody(dateStr, child);
+  const prevDs = dk(addDays(d, -1));
+  const prevCustody = getCustody(prevDs, child);
+
+  if (custody.p !== prevCustody.p) {
+    // Swap boundary — use AppClose swap_from/swap_to times if available, else default
+    if (custody.r === 'SWAP' || prevCustody.r === 'SWAP') {
+      return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
+    }
+    if (custody.r === 'BASE_WEEK') {
+      return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
+    }
+    if (custody.r === 'HOLIDAY_OVERRIDE') {
+      if (custody.h && custody.h.includes('CHRISTMAS_2')) return '10:00 AM';
+      if (custody.h === 'SPRING_BREAK') return 'at school';
+      return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
+    }
+  }
+  return null;
+}
+
+function getSchoolStatus(dateStr, child) {
+  return isSchoolDay(child, parseD(dateStr));
+}
+
+// Build holiday list for detail cards
+function buildHolidayList() {
+  const holidays = [];
+  const seen = {};
+  for (let y = 2025; y <= 2027; y++) {
+    for (const ch of ['L', 'E']) {
+      for (const hol of getHolidays(ch, y)) {
+        const key = hol.h + '|' + dk(hol.s) + '|' + hol.p;
+        if (seen[key]) continue;
+        seen[key] = true;
+        const sD = parseD(dk(hol.s));
+        const eD = parseD(dk(hol.e));
+        const fmt = d => d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+        const exStart = getExchange(dk(hol.s), 'L') || getExchange(dk(hol.s), 'E');
+        const exEnd = getExchange(dk(addDays(hol.e, 1)), 'L') || getExchange(dk(addDays(hol.e, 1)), 'E');
+        let startStr = fmt(sD);
+        if (exStart) startStr += (exStart.startsWith('at ') ? ' ' : ' at ') + exStart;
+        let endStr = fmt(eD);
+        if (exEnd) endStr += (exEnd.startsWith('at ') ? ' ' : ' at ') + exEnd;
+        holidays.push({
+          name: hol.note,
+          parent: hol.p,
+          startDate: dk(hol.s),
+          endDate: dk(hol.e),
+          startStr: startStr,
+          endStr: endStr
+        });
+      }
+    }
+  }
+  holidays.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  return holidays;
+}
+
+const HOLIDAYS = buildHolidayList();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CALENDAR RENDERING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SL = 18;
+const TODAY = dk(new Date());
+
+const CAL_START = new Date(2025, 7, 1);
+const CAL_END = new Date(2027, 6, 31);
+
+function prevDayStr(ds) { return dk(addDays(parseD(ds), -1)); }
+function nextDayStr(ds) { return dk(addDays(parseD(ds), 1)); }
+
+function getParent(ds, ch) {
+  if (ds < '2025-08-01' || ds > '2027-07-31') return null;
+  const c = getCustody(ds, ch);
+  return c ? c.p : null;
+}
+
+function timeToSlice(timeStr) {
+  if (!timeStr) return 0;
+  if (timeStr === 'at school') return 10;
+  if (timeStr.includes('AM')) {
+    const h = parseInt(timeStr);
+    return Math.round(h * SL / 24);
+  }
+  if (timeStr.includes('PM')) {
+    const h = parseInt(timeStr) + 12;
+    return Math.round(h * SL / 24);
+  }
+  return 0;
+}
+
+function buildCalendar() {
+  const body = document.getElementById('calBody');
+  let cM = CAL_START.getMonth(), cY = CAL_START.getFullYear();
+  let html = '';
+
+  while (cY < CAL_END.getFullYear() || (cY === CAL_END.getFullYear() && cM <= CAL_END.getMonth())) {
+    html += '<div class="month-section" id="m' + cY + '-' + String(cM).padStart(2,'0') + '">';
+    html += '<div class="month-label">' + MONTHS[cM] + ' ' + cY + '</div>';
+
+    const lastDay = new Date(cY, cM + 1, 0);
+    let ws = new Date(cY, cM, 1);
+    ws.setDate(ws.getDate() - ws.getDay());
+
+    while (true) {
+      const weekDates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ws); d.setDate(d.getDate() + i);
+        weekDates.push(dk(d));
+      }
+
+      html += '<div class="week-row">';
+
+      // Day dividers
+      for (let dv = 1; dv < 7; dv++) {
+        html += '<div class="day-div" style="grid-column:' + (dv * SL + 1) + '"></div>';
+      }
+
+      // ROW 1: Day cells with school dots
+      for (let i = 0; i < 7; i++) {
+        const ds = weekDates[i];
+        const d = parseD(ds);
+        const inM = d.getMonth() === cM;
+        let cls = 'day-cell';
+        if (!inM) cls += ' other-month';
+        if (ds === TODAY) cls += ' today';
+
+        const c1 = i * SL + 1;
+        const c2 = c1 + SL;
+        html += '<div class="' + cls + '" style="grid-column:' + c1 + '/' + c2 + '" id="d' + ds + '">';
+        html += '<div class="day-num">' + d.getDate() + '</div>';
+
+        // School dots with L/E labels
+        const lS = getSchoolStatus(ds, 'L');
+        const eS = getSchoolStatus(ds, 'E');
+        html += '<div class="school-dots">';
+        html += '<div class="school-dot' + (lS ? ' in-session' : '') + '"><span class="school-dot-label">L</span></div>';
+        html += '<div class="school-dot' + (eS ? ' in-session' : '') + '"><span class="school-dot-label">E</span></div>';
+        html += '</div>';
+        html += '</div>';
+      }
+
+      // ROWS 2 & 4: Custody bars for Luther (row 2) and Elliot (row 4, with gap row 3)
+      ['L', 'E'].forEach(ch => {
+        const childName = ch === 'L' ? 'Luther' : 'Elliot';
+        const rowClass = ch === 'L' ? 'luther' : 'elliot';
+
+        let i = 0;
+        while (i < 7) {
+          const ds = weekDates[i];
+          const p = getParent(ds, ch);
+          if (!p) { i++; continue; }
+
+          // Also track swap status so we split runs when reason changes
+          const startCustody = getCustody(weekDates[i], ch);
+          const startIsSwap = startCustody.r === 'SWAP';
+
+          let runEnd = i;
+          while (runEnd + 1 < 7) {
+            const nextP = getParent(weekDates[runEnd + 1], ch);
+            if (nextP !== p) break;
+            // Also break if swap status changes (so swap gets its own darker bar)
+            const nextCustody = getCustody(weekDates[runEnd + 1], ch);
+            const nextIsSwap = nextCustody.r === 'SWAP';
+            if (nextIsSwap !== startIsSwap) break;
+            runEnd++;
+          }
+
+          const prevDs = prevDayStr(weekDates[i]);
+          const nextDs = nextDayStr(weekDates[runEnd]);
+          const prevP = getParent(prevDs, ch);
+          const nextP = getParent(nextDs, ch);
+          // isStart/isEnd: true if parent OR swap-status changes
+          const prevCustody = prevP ? getCustody(prevDs, ch) : null;
+          const nextCustody = nextP ? getCustody(nextDs, ch) : null;
+          const isStart = prevP !== p || (prevCustody && (prevCustody.r === 'SWAP') !== startIsSwap);
+          const isEnd = nextP !== p || (nextCustody && (nextCustody.r === 'SWAP') !== startIsSwap);
+
+          let colStart, colEnd;
+
+          if (isStart && prevP !== p) {
+            // True parent change — use exchange time for offset
+            const ex = getExchange(weekDates[i], ch);
+            colStart = i * SL + 1 + timeToSlice(ex);
+          } else if (isStart) {
+            // Swap-status boundary within same parent — hard edge at day start
+            colStart = i * SL + 1;
+          } else {
+            colStart = 1;
+          }
+
+          if (isEnd && nextP !== p) {
+            // True parent change — use next day's exchange time
+            const nextDayIdx = runEnd + 1;
+            if (nextDayIdx < 7) {
+              const nextEx = getExchange(weekDates[nextDayIdx], ch);
+              colEnd = nextDayIdx * SL + 1 + timeToSlice(nextEx);
+            } else {
+              colEnd = 7 * SL + 1;
+            }
+          } else if (isEnd) {
+            // Swap-status boundary — hard edge at day end
+            colEnd = (runEnd + 1) * SL + 1;
+          } else {
+            colEnd = 7 * SL + 1;
+          }
+
+          if (colEnd - colStart < 2) colEnd = colStart + 2;
+
+          const isSwap = startIsSwap;
+          let pClass;
+          if (isSwap) {
+            pClass = p === 'C' ? 'swap-chris' : 'swap-jenny';
+          } else {
+            pClass = p === 'C' ? 'chris' : 'jenny';
+          }
+          let barCls = 'cbar ' + rowClass + ' ' + pClass;
+          if (isStart) barCls += ' cap-left';
+          if (isEnd) barCls += ' cap-right';
+
+          html += '<div class="' + barCls + '" style="grid-column:' + colStart + '/' + colEnd + '">';
+
+          // Pickup time at start cap
+          if (isStart) {
+            const pickup = getExchange(weekDates[i], ch);
+            if (pickup) {
+              html += '<span class="bar-pickup">' + pickup + '</span>';
+            }
+          }
+
+          // Pickup time at end cap (shows when boys return)
+          if (isEnd && nextP !== p) {
+            const nextDayIdx = runEnd + 1;
+            if (nextDayIdx < 7) {
+              const endPickup = getExchange(weekDates[nextDayIdx], ch);
+              if (endPickup) {
+                html += '<span class="bar-pickup-end">' + endPickup + '</span>';
+              }
+            }
+          }
+
+          // Center name
+          const barWidth = colEnd - colStart;
+          if (barWidth >= SL) {
+            html += '<span class="bar-name">' + childName + (isSwap ? ' (swap)' : '') + '</span>';
+          } else if (barWidth >= 6) {
+            html += '<span class="bar-name">' + ch + '</span>';
+          }
+
+          html += '</div>';
+          i = runEnd + 1;
+        }
+      });
+
+      // OVERLAY BARS: holidays and events, each on its own row starting from row 5
+      let overlayRow = 5;
+
+      // Holiday bars
+      {
+        let i = 0;
+        while (i < 7) {
+          const ds = weekDates[i];
+          const lCust = getCustody(ds, 'L');
+          const eCust = getCustody(ds, 'E');
+          const isHol = lCust.r === 'HOLIDAY_OVERRIDE' || eCust.r === 'HOLIDAY_OVERRIDE';
+          if (!isHol) { i++; continue; }
+
+          const p = lCust.r === 'HOLIDAY_OVERRIDE' ? lCust.p : eCust.p;
+
+          let runEnd = i;
+          while (runEnd + 1 < 7) {
+            const nds = weekDates[runEnd + 1];
+            const nlCust = getCustody(nds, 'L');
+            const neCust = getCustody(nds, 'E');
+            const nIsHol = nlCust.r === 'HOLIDAY_OVERRIDE' || neCust.r === 'HOLIDAY_OVERRIDE';
+            const np = nlCust.r === 'HOLIDAY_OVERRIDE' ? nlCust.p : neCust.p;
+            if (nIsHol && np === p) runEnd++;
+            else break;
+          }
+
+          // Check continuity
+          const prevDs = prevDayStr(weekDates[i]);
+          const prevLC = getCustody(prevDs, 'L');
+          const prevEC = getCustody(prevDs, 'E');
+          const prevHol = prevLC.r === 'HOLIDAY_OVERRIDE' || prevEC.r === 'HOLIDAY_OVERRIDE';
+          const prevP = prevLC.r === 'HOLIDAY_OVERRIDE' ? prevLC.p : prevEC.p;
+          const nextDs2 = nextDayStr(weekDates[runEnd]);
+          const nextLC = getCustody(nextDs2, 'L');
+          const nextEC = getCustody(nextDs2, 'E');
+          const nextHol = nextLC.r === 'HOLIDAY_OVERRIDE' || nextEC.r === 'HOLIDAY_OVERRIDE';
+          const nextP = nextLC.r === 'HOLIDAY_OVERRIDE' ? nextLC.p : nextEC.p;
+
+          const isStart = !prevHol || prevP !== p;
+          const isEnd = !nextHol || nextP !== p;
+
+          let colStart, colEnd;
+          if (isStart) {
+            const ex = getExchange(weekDates[i], 'L') || getExchange(weekDates[i], 'E');
+            colStart = i * SL + 1 + timeToSlice(ex);
+          } else {
+            colStart = 1;
+          }
+          if (isEnd) {
+            const nextDayIdx = runEnd + 1;
+            if (nextDayIdx < 7) {
+              const nextEx = getExchange(weekDates[nextDayIdx], 'L') || getExchange(weekDates[nextDayIdx], 'E');
+              colEnd = nextDayIdx * SL + 1 + timeToSlice(nextEx);
+            } else {
+              colEnd = 7 * SL + 1;
+            }
+          } else {
+            colEnd = 7 * SL + 1;
+          }
+          if (colEnd - colStart < 2) colEnd = colStart + 2;
+
+          const pClass = p === 'C' ? 'chris' : 'jenny';
+          const pName = p === 'C' ? 'Chris' : 'Jenny';
+          let cls = 'hbar ' + pClass;
+          if (isStart) cls += ' cap-left';
+          if (isEnd) cls += ' cap-right';
+
+          // Find the holiday name and details for tooltip
+          const holNote = lCust.r === 'HOLIDAY_OVERRIDE' ? lCust.note : eCust.note;
+          // Look up full holiday info from HOLIDAYS array for date range
+          const holInfo = HOLIDAYS.find(h => {
+            return weekDates[i] >= h.startDate && weekDates[i] <= h.endDate && h.parent === p;
+          });
+          const holLabel = holNote || 'Holiday';
+
+          const barWidth = colEnd - colStart;
+          html += '<div class="' + cls + '" style="grid-row:' + overlayRow + ';grid-column:' + colStart + '/' + colEnd + '">';
+          if (barWidth >= SL) {
+            html += '<span class="hbar-label">' + holLabel + '</span>';
+          }
+          // Hover tooltip with full details
+          html += '<div class="hbar-tooltip">';
+          html += '<div class="ht-name">' + holLabel + '</div>';
+          if (holInfo) {
+            html += '<div class="ht-range">' + holInfo.startStr + '  \u2013  ' + holInfo.endStr + '</div>';
+          }
+          html += '<div class="ht-parent ' + pClass + '">' + pName + '</div>';
+          html += '</div>';
+          html += '</div>';
+          i = runEnd + 1;
+        }
+        // Only advance row if we rendered any holiday bars this week
+        const weekHasHoliday = Array.from({length: 7}, (_, idx) => {
+          const dds = weekDates[idx];
+          const lc = getCustody(dds, 'L');
+          const ec = getCustody(dds, 'E');
+          return lc.r === 'HOLIDAY_OVERRIDE' || ec.r === 'HOLIDAY_OVERRIDE';
+        }).some(Boolean);
+        if (weekHasHoliday) overlayRow++;
+      }
+
+      // Event bars
+      for (const ev of EVENTS) {
+        const evStart = ev.startDate;
+        const evEnd = ev.endDate;
+        const weekStart = weekDates[0];
+        const weekEnd = weekDates[6];
+        if (evEnd < weekStart || evStart > weekEnd) continue;
+
+        let firstDay = 0, lastDayIdx = 6;
+        for (let d = 0; d < 7; d++) {
+          if (weekDates[d] >= evStart && weekDates[d] <= evEnd) { firstDay = d; break; }
+        }
+        for (let d = 6; d >= 0; d--) {
+          if (weekDates[d] >= evStart && weekDates[d] <= evEnd) { lastDayIdx = d; break; }
+        }
+        const evColStart = firstDay * SL + 1;
+        const evColEnd = (lastDayIdx + 1) * SL + 1;
+        const isEvStart = weekDates[firstDay] === evStart;
+        const isEvEnd = weekDates[lastDayIdx] === evEnd;
+        let evCls = 'ebar ' + ev.status;
+        if (isEvStart) evCls += ' cap-left';
+        if (isEvEnd) evCls += ' cap-right';
+        let evLabel = (evColEnd - evColStart >= SL) ? ev.name : '';
+        html += '<div class="' + evCls + '" style="grid-row:' + overlayRow + ';grid-column:' + evColStart + '/' + evColEnd + '" title="' + ev.name + ' (' + ev.status + ')">';
+        if (evLabel) html += '<span class="ebar-label">' + evLabel + '</span>';
+        html += '</div>';
+        overlayRow++;
+      }
+
+      html += '</div>'; // end week-row
+
+      ws.setDate(ws.getDate() + 7);
+      if (ws.getMonth() !== cM && ws.getDay() === 0) break;
+      if (ws > lastDay && ws.getDay() === 0) break;
+    }
+
+    // Holiday detail cards removed — now shown as hover tooltips on holiday bars
+
+    // Event detail cards for this month
+    const ms = cY + '-' + String(cM + 1).padStart(2, '0') + '-01';
+    const me = cY + '-' + String(cM + 1).padStart(2, '0') + '-' + lastDay.getDate();
+    for (const ev of EVENTS.filter(ev => ev.startDate >= ms && ev.startDate <= me)) {
+      const statusLabels = {pending: 'Pending', chris: "Chris's Event", jenny: "Jenny's Event", swap: "Accepted Swap"};
+      const startD = new Date(ev.startDate + 'T12:00:00');
+      const endD = new Date(ev.endDate + 'T12:00:00');
+      const fmt = d => d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+      html += '<div class="event-detail"><div class="ed-color ' + ev.status + '"></div><div class="ed-body">';
+      html += '<div class="ed-name">' + ev.name + '</div>';
+      html += '<div class="ed-range">' + fmt(startD) + ' \u2013 ' + fmt(endD);
+      if (ev.time) html += ' &middot; ' + ev.time;
+      html += '</div>';
+      if (ev.children) html += '<div style="font-size:12px;color:#666;margin-top:2px">Children: ' + ev.children + '</div>';
+      html += '<div class="ed-status ' + ev.status + '">' + (statusLabels[ev.status] || ev.status) + '</div>';
+      if (ev.note) html += '<div style="font-size:12px;color:#888;margin-top:4px;font-style:italic">' + ev.note + '</div>';
+      html += '</div></div>';
+    }
+
+    html += '</div>'; // end month-section
+    cM++;
+    if (cM > 11) { cM = 0; cY++; }
+  }
+  body.innerHTML = html;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// NAVIGATION & ZOOM
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function scrollToToday() {
+  const el = document.getElementById('d' + TODAY);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  const now = new Date();
+  const m = document.getElementById('m' + now.getFullYear() + '-' + String(now.getMonth()).padStart(2, '0'));
+  if (m) m.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+let currentZoom = 100;
+const ZOOM_STEPS = [75, 85, 100, 115, 130, 150, 175, 200];
+function applyZoom() {
+  const wrap = document.getElementById('zoomWrap');
+  const dow = document.querySelector('.dow-row');
+  const pct = currentZoom / 100;
+  wrap.style.zoom = pct;
+  dow.style.zoom = pct;
+  document.getElementById('zoomLabel').textContent = currentZoom + '%';
+  fixStickyOffsets();
+}
+function zoomIn() {
+  const idx = ZOOM_STEPS.indexOf(currentZoom);
+  if (idx < ZOOM_STEPS.length - 1) currentZoom = ZOOM_STEPS[idx + 1];
+  else if (idx === -1) currentZoom = ZOOM_STEPS.find(s => s > currentZoom) || ZOOM_STEPS[ZOOM_STEPS.length - 1];
+  applyZoom();
+}
+function zoomOut() {
+  const idx = ZOOM_STEPS.indexOf(currentZoom);
+  if (idx > 0) currentZoom = ZOOM_STEPS[idx - 1];
+  else if (idx === -1) currentZoom = [...ZOOM_STEPS].reverse().find(s => s < currentZoom) || ZOOM_STEPS[0];
+  applyZoom();
+}
+function fixStickyOffsets() {
+  const header = document.querySelector('.header');
+  const dow = document.querySelector('.dow-row');
+  if (header && dow) {
+    const zf = currentZoom / 100;
+    const hH = header.offsetHeight;
+    dow.style.top = (hH / zf) + 'px';
+    const dowH = dow.getBoundingClientRect().height;
+    const mTop = (hH + dowH) / zf;
+    document.querySelectorAll('.month-label').forEach(el => { el.style.top = mTop + 'px'; });
+  }
+}
+
+buildCalendar();
+fixStickyOffsets();
+window.addEventListener('resize', fixStickyOffsets);
+setTimeout(scrollToToday, 100);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TOUCH / TAP TOOLTIP SUPPORT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(function() {
+  const backdrop = document.getElementById('tooltipBackdrop');
+  let activeHbar = null;
+
+  function dismissTooltip() {
+    if (activeHbar) {
+      activeHbar.classList.remove('tooltip-active');
+      activeHbar = null;
+    }
+    backdrop.classList.remove('active');
+  }
+
+  // Attach tap listeners to all holiday bars after calendar is built
+  document.querySelectorAll('.hbar').forEach(function(bar) {
+    bar.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (activeHbar === bar) {
+        dismissTooltip();
+        return;
+      }
+      dismissTooltip();
+      bar.classList.add('tooltip-active');
+      activeHbar = bar;
+      backdrop.classList.add('active');
+
+      // Keep tooltip in viewport
+      var tip = bar.querySelector('.hbar-tooltip');
+      if (tip) {
+        tip.style.left = '';
+        tip.style.right = '';
+        tip.style.transform = '';
+        requestAnimationFrame(function() {
+          var r = tip.getBoundingClientRect();
+          if (r.left < 8) {
+            tip.style.left = '0';
+            tip.style.transform = 'none';
+          } else if (r.right > window.innerWidth - 8) {
+            tip.style.left = 'auto';
+            tip.style.right = '0';
+            tip.style.transform = 'none';
+          }
+          if (r.top < 0) {
+            tip.style.bottom = 'auto';
+            tip.style.top = 'calc(100% + 8px)';
+          }
+        });
+      }
+    });
+  });
+
+  backdrop.addEventListener('click', dismissTooltip);
+  document.addEventListener('click', function(e) {
+    if (activeHbar && !activeHbar.contains(e.target)) dismissTooltip();
+  });
+
+  // Mobile auto-zoom: start at 85% on narrow screens so week fits
+  if (window.innerWidth < 500) {
+    currentZoom = 75;
+    applyZoom();
+  } else if (window.innerWidth < 768) {
+    currentZoom = 85;
+    applyZoom();
+  }
+})();
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SERVICE WORKER REGISTRATION
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(function(reg) {
+    console.log('SW registered:', reg.scope);
+  }).catch(function(err) {
+    console.log('SW registration failed:', err);
+  });
+}
+</script>
+</body>
+</html>
