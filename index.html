@@ -677,9 +677,10 @@ function computeHolidays(child, year) {
   const memorial = nthWeekday(year, 4, 1, -1);
   holidays.push({ h: 'MEMORIAL_DAY', p: alternates(2026, 'C', year), s: fridayBefore(memorial), e: memorial, note: 'Memorial Day Holiday' });
 
-  // JULY 4
+  // JULY 4 — 7:30 AM July 4 through 7:30 AM July 5 (Exhibit A)
   const july4 = new Date(year, 6, 4);
-  holidays.push({ h: 'JULY_4', p: alternates(2026, 'J', year), s: july4, e: july4, note: 'Independence Day' });
+  const july5 = new Date(year, 6, 5);
+  holidays.push({ h: 'JULY_4', p: alternates(2026, 'J', year), s: july4, e: july5, note: 'Independence Day' });
 
   return holidays;
 }
@@ -733,16 +734,18 @@ function getExchange(dateStr, child) {
   const prevCustody = getCustody(prevDs, child);
 
   if (custody.p !== prevCustody.p) {
-    // Swap boundary — use AppClose swap_from/swap_to times if available, else default
+    // JULY_4 has a fixed 7:30 AM exchange — entering or exiting
+    if (custody.h === 'JULY_4' || prevCustody.h === 'JULY_4') return '7:30 AM';
+    // Swap boundary
     if (custody.r === 'SWAP' || prevCustody.r === 'SWAP') {
-      return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
-    }
-    if (custody.r === 'BASE_WEEK') {
       return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
     }
     if (custody.r === 'HOLIDAY_OVERRIDE') {
       if (custody.h && custody.h.includes('CHRISTMAS_2')) return '10:00 AM';
       if (custody.h === 'SPRING_BREAK') return 'at school';
+      return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
+    }
+    if (custody.r === 'BASE_WEEK') {
       return isSchoolDay(child, d) ? 'at school' : '5:00 PM';
     }
   }
@@ -812,13 +815,14 @@ function getParent(ds, ch) {
 function timeToSlice(timeStr) {
   if (!timeStr) return 0;
   if (timeStr === 'at school') return 10;
-  if (timeStr.includes('AM')) {
-    const h = parseInt(timeStr);
-    return Math.round(h * SL / 24);
-  }
-  if (timeStr.includes('PM')) {
-    const h = parseInt(timeStr) + 12;
-    return Math.round(h * SL / 24);
+  // Parse "H:MM AM/PM" or "H AM/PM" format
+  const match = timeStr.match(/(\d+):?(\d*)\s*(AM|PM)/i);
+  if (match) {
+    let h = parseInt(match[1]);
+    const m = match[2] ? parseInt(match[2]) : 0;
+    if (match[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (match[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    return Math.round((h + m / 60) * SL / 24);
   }
   return 0;
 }
