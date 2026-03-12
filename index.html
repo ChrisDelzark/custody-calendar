@@ -1043,10 +1043,10 @@ function buildCalendar() {
         }
       });
 
-      // OVERLAY BARS: holidays and events, each on its own row starting from row 5
-      let overlayRow = 5;
+      // OVERLAY BARS: collect holidays + events, pack into rows (longest on top, no whitespace)
+      const overlayBars = []; // {colStart, colEnd, width, htmlFn(row)}
 
-      // Holiday bars
+      // Collect holiday bars
       {
         let i = 0;
         while (i < 7) {
@@ -1110,41 +1110,31 @@ function buildCalendar() {
           if (isStart) cls += ' cap-left';
           if (isEnd) cls += ' cap-right';
 
-          // Find the holiday name and details for tooltip
           const holNote = lCust.r === 'HOLIDAY_OVERRIDE' ? lCust.note : eCust.note;
-          // Look up full holiday info from HOLIDAYS array for date range
           const holInfo = HOLIDAYS.find(h => {
             return weekDates[i] >= h.startDate && weekDates[i] <= h.endDate && h.parent === p;
           });
           const holLabel = holNote || 'Holiday';
-
           const barWidth = colEnd - colStart;
-          html += '<div class="' + cls + '" style="grid-row:' + overlayRow + ';grid-column:' + colStart + '/' + colEnd + '">';
-          if (barWidth >= SL) {
-            html += '<span class="hbar-label">' + holLabel + '</span>';
-          }
-          // Hover tooltip with full details
-          html += '<div class="hbar-tooltip">';
-          html += '<div class="ht-name">' + holLabel + '</div>';
-          if (holInfo) {
-            html += '<div class="ht-range">' + holInfo.startStr + '  \u2013  ' + holInfo.endStr + '</div>';
-          }
-          html += '<div class="ht-parent ' + pClass + '">' + pName + '</div>';
-          html += '</div>';
-          html += '</div>';
+
+          overlayBars.push({
+            colStart: colStart, colEnd: colEnd, width: barWidth,
+            htmlFn: function(row) {
+              let h = '<div class="' + cls + '" style="grid-row:' + row + ';grid-column:' + colStart + '/' + colEnd + '">';
+              if (barWidth >= SL) h += '<span class="hbar-label">' + holLabel + '</span>';
+              h += '<div class="hbar-tooltip">';
+              h += '<div class="ht-name">' + holLabel + '</div>';
+              if (holInfo) h += '<div class="ht-range">' + holInfo.startStr + '  \u2013  ' + holInfo.endStr + '</div>';
+              h += '<div class="ht-parent ' + pClass + '">' + pName + '</div>';
+              h += '</div></div>';
+              return h;
+            }
+          });
           i = runEnd + 1;
         }
-        // Only advance row if we rendered any holiday bars this week
-        const weekHasHoliday = Array.from({length: 7}, (_, idx) => {
-          const dds = weekDates[idx];
-          const lc = getCustody(dds, 'L');
-          const ec = getCustody(dds, 'E');
-          return lc.r === 'HOLIDAY_OVERRIDE' || ec.r === 'HOLIDAY_OVERRIDE';
-        }).some(Boolean);
-        if (weekHasHoliday) overlayRow++;
       }
 
-      // Event bars
+      // Collect event bars
       for (const ev of EVENTS) {
         const evStart = ev.startDate;
         const evEnd = ev.endDate;
@@ -1166,11 +1156,47 @@ function buildCalendar() {
         let evCls = 'ebar ' + ev.status;
         if (isEvStart) evCls += ' cap-left';
         if (isEvEnd) evCls += ' cap-right';
-        let evLabel = (evColEnd - evColStart >= SL) ? ev.name : '';
-        html += '<div class="' + evCls + '" style="grid-row:' + overlayRow + ';grid-column:' + evColStart + '/' + evColEnd + '" title="' + ev.name + ' (' + ev.status + ')">';
-        if (evLabel) html += '<span class="ebar-label">' + evLabel + '</span>';
-        html += '</div>';
-        overlayRow++;
+        const evWidth = evColEnd - evColStart;
+        const evLabel = (evWidth >= SL) ? ev.name : '';
+        const evTitle = ev.name + ' (' + ev.status + ')';
+
+        overlayBars.push({
+          colStart: evColStart, colEnd: evColEnd, width: evWidth,
+          htmlFn: function(row) {
+            let h = '<div class="' + evCls + '" style="grid-row:' + row + ';grid-column:' + evColStart + '/' + evColEnd + '" title="' + evTitle + '">';
+            if (evLabel) h += '<span class="ebar-label">' + evLabel + '</span>';
+            h += '</div>';
+            return h;
+          }
+        });
+      }
+
+      // Pack overlay bars: sort longest first, greedy row packing
+      overlayBars.sort(function(a, b) { return b.width - a.width; });
+      const packedRows = []; // each entry is an array of bars assigned to that row
+      for (const bar of overlayBars) {
+        let placed = false;
+        for (let r = 0; r < packedRows.length; r++) {
+          // Check if bar overlaps any bar already in this row
+          const conflicts = packedRows[r].some(function(existing) {
+            return bar.colStart < existing.colEnd && bar.colEnd > existing.colStart;
+          });
+          if (!conflicts) {
+            packedRows[r].push(bar);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) {
+          packedRows.push([bar]);
+        }
+      }
+      // Render packed rows starting from row 5
+      for (let r = 0; r < packedRows.length; r++) {
+        const gridRow = 5 + r;
+        for (const bar of packedRows[r]) {
+          html += bar.htmlFn(gridRow);
+        }
       }
 
       html += '</div>'; // end week-row
