@@ -255,6 +255,9 @@ body {
 .ed-status.jenny { background: var(--jenny-bg); color: var(--jenny); }
 .ed-status.swap { background: #FCE4EC; color: #C2185B; }
 
+/* ── Hide mobile tap tooltips globally (shown via JS on mobile only) ── */
+.cbar-tooltip { display: none; }
+
 @media (min-width: 768px) {
   .calendar-body { max-width: 900px; margin: 0 auto; }
   .dow-row { max-width: 900px; margin: 0 auto; }
@@ -271,25 +274,15 @@ body {
   }
   .header h1 { font-size: 17px; font-weight: 700; }
 
-  /* Legend: 2-row grid, iOS-sized */
-  .legend {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 4px 12px;
-    font-size: 11px;
-  }
-  .legend-dot { width: 10px; height: 10px; }
+  /* Legend: hidden on mobile */
+  .legend { display: none; }
 
-  /* Zoom + Today: 44pt minimum touch targets (Apple HIG) */
+  /* Zoom: hidden on mobile */
+  .zoom-btn { display: none; }
+  .zoom-level { display: none; }
+
+  /* Today button + controls: clean spacing */
   .header-controls { gap: 12px; }
-  .zoom-btn {
-    width: 44px; height: 44px;
-    font-size: 22px;
-    border-radius: 12px;
-    border: 1px solid var(--gray200);
-    background: var(--gray100);
-  }
-  .zoom-level { font-size: 13px; font-weight: 600; min-width: 44px; }
   .today-btn {
     font-size: 15px; font-weight: 700;
     padding: 10px 20px;
@@ -995,7 +988,7 @@ function buildCalendar() {
             if (ndi < 7) endPickupTip = getExchange(weekDates[ndi], ch);
           }
           const pLabel = p === 'C' ? 'Chris' : 'Jenny';
-          const custNote = isSwap ? (custodyInfo.note || 'Swap') : (custodyInfo.note || pLabel + "'s time");
+          const custNote = isSwap ? (startCustody.note || 'Swap') : (startCustody.note || pLabel + "'s time");
           let tipParts = [childName + ' — ' + pLabel];
           if (startPickup) tipParts.push('Pickup: ' + startPickup);
           if (endPickupTip) tipParts.push('Returns: ' + endPickupTip);
