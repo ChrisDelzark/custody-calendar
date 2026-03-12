@@ -152,23 +152,19 @@ body {
   font-weight: 700;
 }
 
-/* Pickup time at left cap */
-.cbar .bar-pickup {
+/* Exchange time labels — positioned near the handoff edge on the longer bar */
+.cbar .bar-xtime {
   position: absolute;
-  left: 8px;
-  font-size: 7.5px;
-  font-weight: 600;
-  opacity: 0.85;
+  font-size: 8px;
+  font-weight: 700;
+  opacity: 0.9;
   white-space: nowrap;
+  color: rgba(255,255,255,0.95);
+  pointer-events: none;
+  text-shadow: 0 0.5px 1px rgba(0,0,0,0.15);
 }
-.cbar .bar-pickup-end {
-  position: absolute;
-  right: 8px;
-  font-size: 7.5px;
-  font-weight: 600;
-  opacity: 0.85;
-  white-space: nowrap;
-}
+.cbar .bar-xtime-start { left: 6px; }
+.cbar .bar-xtime-end { right: 6px; }
 
 /* ── HOLIDAY BAR: dynamic rows (styled like event bars with hover tooltip) ── */
 .hbar {
@@ -335,9 +331,14 @@ body {
     overflow: hidden;
   }
 
-  /* Pickup times: HIDE on mobile to prevent overlap — shown via tap tooltip */
-  .cbar .bar-pickup,
-  .cbar .bar-pickup-end { display: none; }
+  /* Exchange time labels: visible on mobile too, slightly larger */
+  .cbar .bar-xtime {
+    font-size: 9px;
+    font-weight: 800;
+    opacity: 0.95;
+  }
+  .cbar .bar-xtime-start { left: 4px; }
+  .cbar .bar-xtime-end { right: 4px; }
 
   /* ── Holiday bars: tappable, readable ── */
   .hbar {
@@ -951,47 +952,80 @@ function buildCalendar() {
           if (isStart) barCls += ' cap-left';
           if (isEnd) barCls += ' cap-right';
 
+          const barWidth = colEnd - colStart;
+          const runDays = runEnd - i + 1;
+
           html += '<div class="' + barCls + '" style="grid-column:' + colStart + '/' + colEnd + '">';
 
-          // Pickup time at start cap
-          if (isStart) {
+          // Exchange time labels — shown on the LONGER bar near the handoff edge
+          // At start: this bar is receiving the child. Show time if this bar is longer.
+          let startTimeLabel = null;
+          if (isStart && prevP && prevP !== p) {
             const pickup = getExchange(weekDates[i], ch);
             if (pickup) {
-              html += '<span class="bar-pickup">' + pickup + '</span>';
+              // Figure out adjacent bar's length: the previous bar ends here, how long was it?
+              // We know this bar is runDays long. Previous bar had the rest of the week + carryover.
+              // Simple heuristic: if this bar is >= 3 days, it's the longer one.
+              // If both are equal (e.g., 3.5 / 3.5), show on both sides — first bar gets end label, this gets start.
+              if (runDays >= 3) {
+                startTimeLabel = pickup;
+              }
             }
           }
 
-          // Pickup time at end cap (shows when boys return)
+          let endTimeLabel = null;
           if (isEnd && nextP !== p) {
             const nextDayIdx = runEnd + 1;
             if (nextDayIdx < 7) {
               const endPickup = getExchange(weekDates[nextDayIdx], ch);
               if (endPickup) {
-                html += '<span class="bar-pickup-end">' + endPickup + '</span>';
+                // This bar is ending. Show the time if this bar is the longer one.
+                if (runDays >= 3) {
+                  endTimeLabel = endPickup;
+                }
               }
             }
           }
 
+          // If bar spans ≤ 2 days and neither label was set, the SHORT bar gets no time
+          // (the other side's longer bar will show it)
+          // Edge case: if both bars are short (e.g., 2/5 split with mid-week swap),
+          // the >= 3 day bar always gets it. If somehow both are < 3 (rare), show on end.
+          if (!startTimeLabel && !endTimeLabel && runDays < 3) {
+            // Check: is there NO longer bar on either side this week?
+            // If so, show at least on end to avoid losing the time entirely.
+            if (isEnd && nextP !== p) {
+              const nextDayIdx = runEnd + 1;
+              if (nextDayIdx < 7) {
+                const fallbackTime = getExchange(weekDates[nextDayIdx], ch);
+                if (fallbackTime) endTimeLabel = fallbackTime;
+              }
+            } else if (isStart && prevP && prevP !== p) {
+              const fallbackTime = getExchange(weekDates[i], ch);
+              if (fallbackTime) startTimeLabel = fallbackTime;
+            }
+          }
+
+          if (startTimeLabel) {
+            html += '<span class="bar-xtime bar-xtime-start">' + startTimeLabel + '</span>';
+          }
+          if (endTimeLabel) {
+            html += '<span class="bar-xtime bar-xtime-end">' + endTimeLabel + '</span>';
+          }
+
           // Center name
-          const barWidth = colEnd - colStart;
           if (barWidth >= SL) {
             html += '<span class="bar-name">' + childName + (isSwap ? ' (swap)' : '') + '</span>';
           } else if (barWidth >= 6) {
             html += '<span class="bar-name">' + ch + '</span>';
           }
 
-          // Mobile tap tooltip: shows pickup times hidden on mobile
-          const startPickup = isStart ? getExchange(weekDates[i], ch) : null;
-          let endPickupTip = null;
-          if (isEnd && nextP !== p) {
-            const ndi = runEnd + 1;
-            if (ndi < 7) endPickupTip = getExchange(weekDates[ndi], ch);
-          }
+          // Mobile tap tooltip
           const pLabel = p === 'C' ? 'Chris' : 'Jenny';
           const custNote = isSwap ? (startCustody.note || 'Swap') : (startCustody.note || pLabel + "'s time");
           let tipParts = [childName + ' — ' + pLabel];
-          if (startPickup) tipParts.push('Pickup: ' + startPickup);
-          if (endPickupTip) tipParts.push('Returns: ' + endPickupTip);
+          if (startTimeLabel) tipParts.push('Pickup: ' + startTimeLabel);
+          if (endTimeLabel) tipParts.push('Returns: ' + endTimeLabel);
           if (isSwap) tipParts.push(custNote);
           html += '<div class="cbar-tooltip">' + tipParts.join('<br>') + '</div>';
 
