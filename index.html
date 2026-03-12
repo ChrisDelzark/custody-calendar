@@ -481,6 +481,101 @@ body {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const SCHOOL_EVENTS = [{"c":"L","t":"HOLIDAY","n":"Independence Day","s":"2025-07-04","ns":1},{"c":"E","t":"HOLIDAY","n":"Independence Day","s":"2025-07-04","ns":1},{"c":"L","t":"FIRST_DAY","n":"First Day of School","s":"2025-08-11"},{"c":"E","t":"FIRST_DAY","n":"First Day of School","s":"2025-08-12"},{"c":"L","t":"HOLIDAY","n":"Labor Day","s":"2025-09-01","ns":1},{"c":"E","t":"HOLIDAY","n":"Labor Day","s":"2025-09-01","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2025-10-15"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2025-10-15"},{"c":"L","t":"BREAK","n":"Fall Break / Staff Development","s":"2025-10-16","e":"2025-10-20","ns":1},{"c":"E","t":"BREAK","n":"Fall Break / Staff Development","s":"2025-10-16","e":"2025-10-20","ns":1},{"c":"E","t":"BREAK","n":"Thanksgiving Break","s":"2025-11-24","e":"2025-11-28","ns":1},{"c":"L","t":"BREAK","n":"Thanksgiving Break","s":"2025-11-25","e":"2025-11-28","ns":1},{"c":"L","t":"BREAK","n":"Winter Break","s":"2025-12-19","e":"2026-01-05","ns":1},{"c":"E","t":"BREAK","n":"Winter Break","s":"2025-12-19","e":"2026-01-05","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Virtual Teacher Workday","s":"2026-01-05","ns":1},{"c":"L","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2026-01-19","ns":1},{"c":"E","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2026-01-19","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2026-02-12"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2026-02-12"},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2026-02-13"},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2026-02-13","ns":1},{"c":"L","t":"HOLIDAY","n":"Presidents Day","s":"2026-02-16","ns":1},{"c":"E","t":"HOLIDAY","n":"Presidents Day","s":"2026-02-16","ns":1},{"c":"L","t":"BREAK","n":"Spring Break","s":"2026-03-23","e":"2026-03-26","ns":1},{"c":"E","t":"BREAK","n":"Spring Break","s":"2026-03-23","e":"2026-03-27","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2026-04-17","ns":1},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2026-04-17","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Day of School","s":"2026-05-21"},{"c":"E","t":"LAST_DAY","n":"Last Day of School","s":"2026-05-22"},{"c":"L","t":"HOLIDAY","n":"Memorial Day","s":"2026-05-25","ns":1},{"c":"E","t":"HOLIDAY","n":"Memorial Day","s":"2026-05-25","ns":1},{"c":"E","t":"HOLIDAY","n":"Independence Day","s":"2026-07-04","ns":1},{"c":"L","t":"FIRST_DAY","n":"First Day of School","s":"2026-08-11"},{"c":"E","t":"FIRST_DAY","n":"First Day of School","s":"2026-08-11"},{"c":"L","t":"HOLIDAY","n":"Labor Day","s":"2026-09-07","ns":1},{"c":"E","t":"HOLIDAY","n":"Labor Day","s":"2026-09-07","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2026-10-14"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Fall)","s":"2026-10-14"},{"c":"L","t":"BREAK","n":"Fall Break / Staff Development","s":"2026-10-15","e":"2026-10-16","ns":1},{"c":"E","t":"BREAK","n":"Fall Break / Staff Development","s":"2026-10-15","e":"2026-10-19","ns":1},{"c":"L","t":"BREAK","n":"Thanksgiving Break","s":"2026-11-23","e":"2026-11-27","ns":1},{"c":"E","t":"BREAK","n":"Thanksgiving Break","s":"2026-11-23","e":"2026-11-27","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Student Day (Winter)","s":"2026-12-18"},{"c":"E","t":"BREAK","n":"Winter Break","s":"2026-12-18","e":"2027-01-04","ns":1},{"c":"L","t":"BREAK","n":"Winter Break","s":"2026-12-21","e":"2027-01-03","ns":1},{"c":"L","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2027-01-18","ns":1},{"c":"E","t":"HOLIDAY","n":"Martin Luther King Jr Day","s":"2027-01-18","ns":1},{"c":"L","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2027-02-11"},{"c":"E","t":"PTC","n":"Parent Teacher Conference (Spring)","s":"2027-02-11"},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2027-02-12"},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development","s":"2027-02-12","ns":1},{"c":"L","t":"HOLIDAY","n":"Presidents Day","s":"2027-02-15","ns":1},{"c":"E","t":"HOLIDAY","n":"Presidents Day","s":"2027-02-15","ns":1},{"c":"L","t":"BREAK","n":"Spring Break","s":"2027-03-22","e":"2027-03-26","ns":1},{"c":"E","t":"BREAK","n":"Spring Break","s":"2027-03-22","e":"2027-03-26","ns":1},{"c":"L","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2027-04-16","ns":1},{"c":"E","t":"TEACHER_WORKDAY","n":"Staff Development (April)","s":"2027-04-16","ns":1},{"c":"L","t":"LAST_DAY","n":"Last Day of School","s":"2027-05-21"},{"c":"E","t":"LAST_DAY","n":"Last Day of School","s":"2027-05-21"},{"c":"L","t":"HOLIDAY","n":"Memorial Day","s":"2027-05-31","ns":1},{"c":"E","t":"HOLIDAY","n":"Memorial Day","s":"2027-05-31","ns":1}];
 
+// ── Approximate school calendar generator for years beyond known data ──
+// Patterns derived from Bentonville/Rogers AR school districts 2025-2027.
+// These are estimates — replace with real dates when district publishes them.
+(function generateApproxSchoolEvents() {
+  // Find the last school year we have real data for
+  const knownYears = {};
+  for (const e of SCHOOL_EVENTS) {
+    if (e.t === 'FIRST_DAY') {
+      const yr = parseInt(e.s.substring(0, 4));
+      const sy = e.s.substring(5,7) >= '07' ? yr + '-' + (yr+1) : (yr-1) + '-' + yr;
+      knownYears[sy] = true;
+    }
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function nthWkday(yr, mo, wd, n) {
+    if (n > 0) { const f = new Date(yr,mo,1); return new Date(yr,mo,1+(wd-f.getDay()+7)%7+7*(n-1)); }
+    else { const l = new Date(yr,mo+1,0); return new Date(yr,mo+1,-(l.getDay()-wd+7)%7); }
+  }
+  function addD(d,n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+
+  // Generate approximate events for school years 2027-2028 through 2035-2036
+  for (let startYr = 2027; startYr <= 2035; startYr++) {
+    const sy = startYr + '-' + (startYr + 1);
+    if (knownYears[sy]) continue;
+
+    const endYr = startYr + 1;
+    for (const ch of ['L', 'E']) {
+      // First Day of School: 2nd Monday of August
+      const firstDay = nthWkday(startYr, 7, 1, 2);
+      SCHOOL_EVENTS.push({c:ch, t:'FIRST_DAY', n:'First Day of School (approx)', s:fmt(firstDay)});
+
+      // Labor Day: 1st Monday of September
+      const laborDay = nthWkday(startYr, 8, 1, 1);
+      SCHOOL_EVENTS.push({c:ch, t:'HOLIDAY', n:'Labor Day', s:fmt(laborDay), ns:1});
+
+      // Fall Break: 3rd week of October, Thu-Mon (~Oct 16-20 pattern)
+      const fallPTC = nthWkday(startYr, 9, 3, 3); // 3rd Wednesday of Oct
+      const fallStart = addD(fallPTC, 1); // Thursday
+      const fallEnd = addD(fallStart, 4); // Monday
+      SCHOOL_EVENTS.push({c:ch, t:'PTC', n:'Parent Teacher Conference (Fall, approx)', s:fmt(fallPTC)});
+      SCHOOL_EVENTS.push({c:ch, t:'BREAK', n:'Fall Break / Staff Development (approx)', s:fmt(fallStart), e:fmt(fallEnd), ns:1});
+
+      // Thanksgiving Break: Mon-Fri of Thanksgiving week
+      const thanksgiving = nthWkday(startYr, 10, 4, 4); // 4th Thursday of November
+      const thanksStart = addD(thanksgiving, -3); // Monday
+      const thanksEnd = addD(thanksgiving, 1); // Friday
+      SCHOOL_EVENTS.push({c:ch, t:'BREAK', n:'Thanksgiving Break (approx)', s:fmt(thanksStart), e:fmt(thanksEnd), ns:1});
+
+      // Winter Break: ~Dec 19 to Jan 4 (Fri before Christmas to first Mon of Jan)
+      let winterStart = new Date(startYr, 11, 19);
+      // Back up to Friday if Dec 19 isn't a Friday
+      while (winterStart.getDay() !== 5) winterStart = addD(winterStart, -1);
+      let winterEnd = new Date(endYr, 0, 4);
+      // Push to Sunday/Monday
+      while (winterEnd.getDay() !== 0 && winterEnd.getDay() !== 1) winterEnd = addD(winterEnd, 1);
+      SCHOOL_EVENTS.push({c:ch, t:'BREAK', n:'Winter Break (approx)', s:fmt(winterStart), e:fmt(winterEnd), ns:1});
+
+      // MLK Day: 3rd Monday of January
+      const mlk = nthWkday(endYr, 0, 1, 3);
+      SCHOOL_EVENTS.push({c:ch, t:'HOLIDAY', n:'Martin Luther King Jr Day', s:fmt(mlk), ns:1});
+
+      // Presidents Day: 3rd Monday of February
+      const presDay = nthWkday(endYr, 1, 1, 3);
+      SCHOOL_EVENTS.push({c:ch, t:'HOLIDAY', n:'Presidents Day', s:fmt(presDay), ns:1});
+
+      // Staff Development: day after PTC in February (~2nd Thu/Fri of Feb)
+      const springPTC = nthWkday(endYr, 1, 4, 2); // 2nd Thursday of Feb
+      SCHOOL_EVENTS.push({c:ch, t:'PTC', n:'Parent Teacher Conference (Spring, approx)', s:fmt(springPTC)});
+      SCHOOL_EVENTS.push({c:ch, t:'TEACHER_WORKDAY', n:'Staff Development (approx)', s:fmt(addD(springPTC, 1)), ns:1});
+
+      // Spring Break: 4th week of March, Mon-Fri
+      const springMon = nthWkday(endYr, 2, 1, 4); // 4th Monday of March
+      const springFri = addD(springMon, 4);
+      SCHOOL_EVENTS.push({c:ch, t:'BREAK', n:'Spring Break (approx)', s:fmt(springMon), e:fmt(springFri), ns:1});
+
+      // Staff Development April: 3rd Friday of April
+      const aprilSD = nthWkday(endYr, 3, 5, 3);
+      SCHOOL_EVENTS.push({c:ch, t:'TEACHER_WORKDAY', n:'Staff Development (April, approx)', s:fmt(aprilSD), ns:1});
+
+      // Last Day of School: 3rd Thursday of May
+      const lastDay = nthWkday(endYr, 4, 4, 3);
+      SCHOOL_EVENTS.push({c:ch, t:'LAST_DAY', n:'Last Day of School (approx)', s:fmt(lastDay)});
+
+      // Memorial Day
+      const memorial = nthWkday(endYr, 4, 1, -1);
+      SCHOOL_EVENTS.push({c:ch, t:'HOLIDAY', n:'Memorial Day', s:fmt(memorial), ns:1});
+
+      // Independence Day
+      SCHOOL_EVENTS.push({c:ch, t:'HOLIDAY', n:'Independence Day', s:endYr+'-07-04', ns:1});
+    }
+  }
+})();
+
 // Swap days override — agreed custody exchanges
 // key: "YYYY-MM-DD|L" or "YYYY-MM-DD|E", value: {p:"C"or"J", orig:"C"or"J", notes:"..."}
 const SWAP_DAYS = {
@@ -760,7 +855,7 @@ function getSchoolStatus(dateStr, child) {
 function buildHolidayList() {
   const holidays = [];
   const seen = {};
-  for (let y = 2025; y <= 2027; y++) {
+  for (let y = CAL_START.getFullYear(); y <= CAL_END.getFullYear(); y++) {
     for (const ch of ['L', 'E']) {
       for (const hol of getHolidays(ch, y)) {
         const key = hol.h + '|' + dk(hol.s) + '|' + hol.p;
@@ -800,14 +895,13 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 const SL = 18;
 const TODAY = dk(new Date());
 
-const CAL_START = new Date(2025, 7, 1);
-const CAL_END = new Date(2027, 6, 31);
+const CAL_START = new Date(2025, 7, 1);  // Aug 2025 (decree starts May 2025)
+const CAL_END = new Date(2035, 11, 31);  // Dec 2035 — effectively indefinite
 
 function prevDayStr(ds) { return dk(addDays(parseD(ds), -1)); }
 function nextDayStr(ds) { return dk(addDays(parseD(ds), 1)); }
 
 function getParent(ds, ch) {
-  if (ds < '2025-08-01' || ds > '2027-07-31') return null;
   const c = getCustody(ds, ch);
   return c ? c.p : null;
 }
