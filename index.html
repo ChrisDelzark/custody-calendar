@@ -957,60 +957,67 @@ function buildCalendar() {
 
           html += '<div class="' + barCls + '" style="grid-column:' + colStart + '/' + colEnd + '">';
 
-          // Exchange time labels — shown on the LONGER bar near the handoff edge
-          // At start: this bar is receiving the child. Show time if this bar is longer.
-          let startTimeLabel = null;
+          // Exchange time label — ONE label per bar, on the LONGER side only.
+          // At each exchange boundary two bars meet. The longer bar shows the time
+          // near the handoff edge. Each bar picks at most one edge to label.
+          //
+          // To figure out which side is longer we need the adjacent bar's day count.
+          // Previous bar's length within THIS week row = i (days 0..i-1).
+          // Next bar's length within THIS week row = 6 - runEnd (days runEnd+1..6).
+          // If the adjacent bar wraps from another week we don't see it, but we know
+          // this bar starts/ends at the week edge so the other bar is at least as long.
+
+          let xTimeLabel = null;  // the one label we'll show
+          let xTimeEdge = null;   // 'start' or 'end'
+
+          const prevBarDays = i;                      // days of prev bar visible this week
+          const nextBarDays = 6 - runEnd;             // days of next bar visible this week
+
+          // Check start edge: is this bar longer than the previous bar?
           if (isStart && prevP && prevP !== p) {
             const pickup = getExchange(weekDates[i], ch);
-            if (pickup) {
-              // Figure out adjacent bar's length: the previous bar ends here, how long was it?
-              // We know this bar is runDays long. Previous bar had the rest of the week + carryover.
-              // Simple heuristic: if this bar is >= 3 days, it's the longer one.
-              // If both are equal (e.g., 3.5 / 3.5), show on both sides — first bar gets end label, this gets start.
-              if (runDays >= 3) {
-                startTimeLabel = pickup;
+            if (pickup && runDays > prevBarDays) {
+              xTimeLabel = pickup;
+              xTimeEdge = 'start';
+            }
+          }
+
+          // Check end edge: is this bar longer than the next bar?
+          // Only if we didn't already pick the start edge.
+          if (!xTimeLabel && isEnd && nextP !== p) {
+            const nextDayIdx = runEnd + 1;
+            if (nextDayIdx < 7) {
+              const endPickup = getExchange(weekDates[nextDayIdx], ch);
+              if (endPickup && runDays > nextBarDays) {
+                xTimeLabel = endPickup;
+                xTimeEdge = 'end';
               }
             }
           }
 
-          let endTimeLabel = null;
-          if (isEnd && nextP !== p) {
+          // Tie-breaker: if both bars are the same length, show on the bar
+          // that ENDS (drops off), since "Returns: at school" is more intuitive.
+          if (!xTimeLabel && isEnd && nextP !== p && runDays === nextBarDays) {
             const nextDayIdx = runEnd + 1;
             if (nextDayIdx < 7) {
               const endPickup = getExchange(weekDates[nextDayIdx], ch);
               if (endPickup) {
-                // This bar is ending. Show the time if this bar is the longer one.
-                if (runDays >= 3) {
-                  endTimeLabel = endPickup;
-                }
+                xTimeLabel = endPickup;
+                xTimeEdge = 'end';
               }
             }
           }
-
-          // If bar spans ≤ 2 days and neither label was set, the SHORT bar gets no time
-          // (the other side's longer bar will show it)
-          // Edge case: if both bars are short (e.g., 2/5 split with mid-week swap),
-          // the >= 3 day bar always gets it. If somehow both are < 3 (rare), show on end.
-          if (!startTimeLabel && !endTimeLabel && runDays < 3) {
-            // Check: is there NO longer bar on either side this week?
-            // If so, show at least on end to avoid losing the time entirely.
-            if (isEnd && nextP !== p) {
-              const nextDayIdx = runEnd + 1;
-              if (nextDayIdx < 7) {
-                const fallbackTime = getExchange(weekDates[nextDayIdx], ch);
-                if (fallbackTime) endTimeLabel = fallbackTime;
-              }
-            } else if (isStart && prevP && prevP !== p) {
-              const fallbackTime = getExchange(weekDates[i], ch);
-              if (fallbackTime) startTimeLabel = fallbackTime;
+          if (!xTimeLabel && isStart && prevP && prevP !== p && runDays === prevBarDays) {
+            const pickup = getExchange(weekDates[i], ch);
+            if (pickup) {
+              xTimeLabel = pickup;
+              xTimeEdge = 'start';
             }
           }
 
-          if (startTimeLabel) {
-            html += '<span class="bar-xtime bar-xtime-start">' + startTimeLabel + '</span>';
-          }
-          if (endTimeLabel) {
-            html += '<span class="bar-xtime bar-xtime-end">' + endTimeLabel + '</span>';
+          if (xTimeLabel) {
+            const cls = xTimeEdge === 'start' ? 'bar-xtime-start' : 'bar-xtime-end';
+            html += '<span class="bar-xtime ' + cls + '">' + xTimeLabel + '</span>';
           }
 
           // Center name
@@ -1024,8 +1031,10 @@ function buildCalendar() {
           const pLabel = p === 'C' ? 'Chris' : 'Jenny';
           const custNote = isSwap ? (startCustody.note || 'Swap') : (startCustody.note || pLabel + "'s time");
           let tipParts = [childName + ' — ' + pLabel];
-          if (startTimeLabel) tipParts.push('Pickup: ' + startTimeLabel);
-          if (endTimeLabel) tipParts.push('Returns: ' + endTimeLabel);
+          if (xTimeLabel) {
+            const verb = xTimeEdge === 'start' ? 'Pickup' : 'Returns';
+            tipParts.push(verb + ': ' + xTimeLabel);
+          }
           if (isSwap) tipParts.push(custNote);
           html += '<div class="cbar-tooltip">' + tipParts.join('<br>') + '</div>';
 
