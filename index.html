@@ -260,71 +260,175 @@ body {
   .dow-row { max-width: 900px; margin: 0 auto; }
 }
 
-/* ── MOBILE OPTIMIZATIONS ── */
+/* ── MOBILE: NATIVE iOS FEEL ── */
 @media (max-width: 767px) {
-  /* Header: stack vertically */
+
+  /* ── Header: compact, native toolbar style ── */
   .header {
     flex-direction: column;
-    gap: 8px;
-    padding: 8px 12px 6px;
+    gap: 6px;
+    padding: 6px 16px 8px;
   }
-  .header h1 { font-size: 15px; }
+  .header h1 { font-size: 17px; font-weight: 700; }
 
-  /* Legend: wrap into 2 rows, smaller text */
+  /* Legend: 2-row grid, iOS-sized */
   .legend {
     flex-wrap: wrap;
     justify-content: center;
-    gap: 6px 10px;
-    font-size: 10px;
+    gap: 4px 12px;
+    font-size: 11px;
+  }
+  .legend-dot { width: 10px; height: 10px; }
+
+  /* Zoom + Today: 44pt minimum touch targets (Apple HIG) */
+  .header-controls { gap: 12px; }
+  .zoom-btn {
+    width: 44px; height: 44px;
+    font-size: 22px;
+    border-radius: 12px;
+    border: 1px solid var(--gray200);
+    background: var(--gray100);
+  }
+  .zoom-level { font-size: 13px; font-weight: 600; min-width: 44px; }
+  .today-btn {
+    font-size: 15px; font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: var(--chris);
+    color: #fff;
+  }
+  .today-btn:active { background: #1A8A88; }
+
+  /* Day-of-week header */
+  .dow-row { font-size: 12px; font-weight: 700; padding: 8px 0 6px; color: var(--gray500); }
+
+  /* Month labels: bold, native section header */
+  .month-label { font-size: 22px; font-weight: 800; padding: 20px 16px 10px; }
+
+  /* ── Week row: taller bars, more breathing room ── */
+  .week-row {
+    grid-template-rows: auto 28px 3px 28px; /* taller custody bars + gap */
+    padding-bottom: 6px;
   }
 
-  /* Zoom controls: larger touch targets */
-  .zoom-btn { width: 36px; height: 36px; font-size: 20px; }
-  .today-btn { font-size: 14px; padding: 8px 14px; }
-  .header-controls { gap: 8px; }
+  /* Day cells: clean, tappable */
+  .day-cell { padding: 6px 0 4px; }
+  .day-num {
+    font-size: 15px; font-weight: 500;
+    width: 32px; height: 32px;
+  }
+  .day-cell.today .day-num { font-weight: 800; }
 
-  /* Day-of-week row */
-  .dow-row { font-size: 10px; padding: 6px 0 4px; }
-
-  /* Month labels */
-  .month-label { font-size: 18px; padding: 14px 12px 8px; }
-
-  /* Day cells: smaller date numbers, larger touch area */
-  .day-num { font-size: 13px; width: 26px; height: 26px; }
-  .day-cell { padding: 4px 0 2px; }
-
-  /* School dots slightly smaller */
-  .school-dot { width: 7px; height: 7px; }
+  /* School dots: slightly larger */
+  .school-dots { gap: 2px; margin-top: 1px; }
+  .school-dot { width: 8px; height: 8px; }
   .school-dot-label { font-size: 5px; }
 
-  /* Custody bars: keep readable */
-  .cbar { height: 18px; }
-  .cbar .bar-name { font-size: 8px; }
-  .cbar .bar-pickup, .cbar .bar-pickup-end { font-size: 6.5px; }
-
-  /* Holiday + event bars: slightly taller for tap targets */
-  .hbar { height: 16px; min-height: 16px; }
-  .hbar-label { font-size: 6.5px; }
-  .ebar { height: 16px; min-height: 16px; }
-  .ebar-label { font-size: 6.5px; }
-
-  /* Holiday tooltip: position from left edge on mobile to stay in viewport */
-  .hbar .hbar-tooltip {
-    left: 0;
-    transform: none;
-    min-width: 180px;
-    max-width: calc(100vw - 32px);
-    padding: 10px 12px;
+  /* ── Custody bars: taller, clean text ── */
+  .cbar {
+    height: 26px;
+    border-radius: 8px;
+    font-size: 11px;
   }
-  .hbar-tooltip .ht-name { font-size: 14px; }
-  .hbar-tooltip .ht-range { font-size: 12px; }
-  .hbar-tooltip .ht-parent { font-size: 12px; }
+  .cbar.cap-left { border-top-left-radius: 8px; border-bottom-left-radius: 8px; margin-left: 2px; }
+  .cbar.cap-right { border-top-right-radius: 8px; border-bottom-right-radius: 8px; margin-right: 2px; }
 
-  /* Event detail cards: mobile-friendly */
-  .event-detail { padding: 8px 12px; }
-  .ed-name { font-size: 14px; }
-  .ed-range { font-size: 12px; }
-  .ed-status { font-size: 10px; }
+  /* Name: always centered, truncate if needed */
+  .cbar .bar-name {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  /* Pickup times: HIDE on mobile to prevent overlap — shown via tap tooltip */
+  .cbar .bar-pickup,
+  .cbar .bar-pickup-end { display: none; }
+
+  /* ── Holiday bars: tappable, readable ── */
+  .hbar {
+    height: 20px;
+    min-height: 20px;
+    border-radius: 8px;
+    margin-top: 1px;
+  }
+  .hbar.cap-left { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+  .hbar.cap-right { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+  .hbar-label {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 0 6px;
+    text-shadow: 0 0.5px 2px rgba(0,0,0,0.3);
+  }
+
+  /* ── Event bars: same treatment ── */
+  .ebar {
+    height: 20px;
+    min-height: 20px;
+    border-radius: 8px;
+    margin-top: 1px;
+  }
+  .ebar.cap-left { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+  .ebar.cap-right { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+  .ebar-label {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 0 6px;
+  }
+
+  /* ── Holiday tooltip: larger, native card feel ── */
+  .hbar .hbar-tooltip {
+    left: 8px;
+    right: 8px;
+    transform: none;
+    min-width: unset;
+    width: calc(100vw - 48px);
+    max-width: 340px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18), 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .hbar-tooltip .ht-name { font-size: 16px; font-weight: 700; }
+  .hbar-tooltip .ht-range { font-size: 13px; margin-top: 4px; }
+  .hbar-tooltip .ht-parent { font-size: 13px; padding: 4px 14px; margin-top: 8px; }
+
+  /* ── Event detail cards: native list cell style ── */
+  .event-detail {
+    padding: 12px 16px;
+    gap: 12px;
+    border-radius: 0;
+  }
+  .ed-color { width: 5px; border-radius: 3px; min-height: 48px; }
+  .ed-name { font-size: 16px; font-weight: 600; }
+  .ed-range { font-size: 13px; }
+  .ed-status { font-size: 12px; padding: 4px 12px; }
+
+  /* ── Custody bar tap tooltip (mobile-only) ── */
+  .cbar-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+    padding: 10px 14px;
+    min-width: 160px;
+    max-width: 260px;
+    z-index: 200;
+    pointer-events: none;
+    white-space: normal;
+    font-size: 13px;
+    color: var(--gray900);
+    font-weight: 600;
+    text-align: center;
+  }
+  .cbar.tooltip-active .cbar-tooltip { display: block; }
 }
 
 /* ── TOUCH / TAP TOOLTIP SUPPORT ── */
@@ -883,6 +987,21 @@ function buildCalendar() {
             html += '<span class="bar-name">' + ch + '</span>';
           }
 
+          // Mobile tap tooltip: shows pickup times hidden on mobile
+          const startPickup = isStart ? getExchange(weekDates[i], ch) : null;
+          let endPickupTip = null;
+          if (isEnd && nextP !== p) {
+            const ndi = runEnd + 1;
+            if (ndi < 7) endPickupTip = getExchange(weekDates[ndi], ch);
+          }
+          const pLabel = p === 'C' ? 'Chris' : 'Jenny';
+          const custNote = isSwap ? (custodyInfo.note || 'Swap') : (custodyInfo.note || pLabel + "'s time");
+          let tipParts = [childName + ' — ' + pLabel];
+          if (startPickup) tipParts.push('Pickup: ' + startPickup);
+          if (endPickupTip) tipParts.push('Returns: ' + endPickupTip);
+          if (isSwap) tipParts.push(custNote);
+          html += '<div class="cbar-tooltip">' + tipParts.join('<br>') + '</div>';
+
           html += '</div>';
           i = runEnd + 1;
         }
@@ -1111,65 +1230,63 @@ setTimeout(scrollToToday, 100);
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 (function() {
   const backdrop = document.getElementById('tooltipBackdrop');
-  let activeHbar = null;
+  let activeBar = null;
 
   function dismissTooltip() {
-    if (activeHbar) {
-      activeHbar.classList.remove('tooltip-active');
-      activeHbar = null;
+    if (activeBar) {
+      activeBar.classList.remove('tooltip-active');
+      activeBar = null;
     }
     backdrop.classList.remove('active');
   }
 
-  // Attach tap listeners to all holiday bars after calendar is built
-  document.querySelectorAll('.hbar').forEach(function(bar) {
+  function attachTapHandler(bar, tipSelector) {
     bar.addEventListener('click', function(e) {
       e.stopPropagation();
-      if (activeHbar === bar) {
-        dismissTooltip();
-        return;
-      }
+      if (activeBar === bar) { dismissTooltip(); return; }
       dismissTooltip();
       bar.classList.add('tooltip-active');
-      activeHbar = bar;
+      activeBar = bar;
       backdrop.classList.add('active');
 
       // Keep tooltip in viewport
-      var tip = bar.querySelector('.hbar-tooltip');
+      var tip = bar.querySelector(tipSelector);
       if (tip) {
         tip.style.left = '';
         tip.style.right = '';
         tip.style.transform = '';
+        tip.style.bottom = '';
+        tip.style.top = '';
         requestAnimationFrame(function() {
           var r = tip.getBoundingClientRect();
-          if (r.left < 8) {
-            tip.style.left = '0';
-            tip.style.transform = 'none';
-          } else if (r.right > window.innerWidth - 8) {
-            tip.style.left = 'auto';
-            tip.style.right = '0';
-            tip.style.transform = 'none';
-          }
-          if (r.top < 0) {
-            tip.style.bottom = 'auto';
-            tip.style.top = 'calc(100% + 8px)';
-          }
+          if (r.left < 8) { tip.style.left = '0'; tip.style.transform = 'none'; }
+          else if (r.right > window.innerWidth - 8) { tip.style.left = 'auto'; tip.style.right = '0'; tip.style.transform = 'none'; }
+          if (r.top < 0) { tip.style.bottom = 'auto'; tip.style.top = 'calc(100% + 8px)'; }
         });
       }
     });
+  }
+
+  // Holiday bars
+  document.querySelectorAll('.hbar').forEach(function(bar) {
+    attachTapHandler(bar, '.hbar-tooltip');
+  });
+
+  // Custody bars (mobile only — show pickup times)
+  document.querySelectorAll('.cbar').forEach(function(bar) {
+    if (bar.querySelector('.cbar-tooltip')) {
+      attachTapHandler(bar, '.cbar-tooltip');
+    }
   });
 
   backdrop.addEventListener('click', dismissTooltip);
   document.addEventListener('click', function(e) {
-    if (activeHbar && !activeHbar.contains(e.target)) dismissTooltip();
+    if (activeBar && !activeBar.contains(e.target)) dismissTooltip();
   });
 
-  // Mobile auto-zoom: start at 85% on narrow screens so week fits
+  // Mobile auto-zoom: no auto-zoom, let user control (bars are bigger now)
   if (window.innerWidth < 500) {
-    currentZoom = 75;
-    applyZoom();
-  } else if (window.innerWidth < 768) {
-    currentZoom = 85;
+    currentZoom = 100;
     applyZoom();
   }
 })();
