@@ -578,20 +578,71 @@ const SCHOOL_EVENTS = [{"c":"L","t":"HOLIDAY","n":"Independence Day","s":"2025-0
 
 // Swap days override — agreed custody exchanges
 // key: "YYYY-MM-DD|L" or "YYYY-MM-DD|E", value: {p:"C"or"J", orig:"C"or"J", notes:"..."}
+// Exchange agreement: Jenny gets 11 days, Chris gets 11 days
 const SWAP_DAYS = {
+  // ── Jenny gets: Apr 6–9, 2026 (4 full days, Chris offered) ──
+  "2026-04-06|L": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-06|E": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-07|L": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-07|E": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-08|L": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-08|E": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-09|L": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  "2026-04-09|E": {p:"J", orig:"C", notes:"Exchange days (Chris offered)"},
+  // ── Jenny gets: May 29–Jun 4, 2026 (7 full days, Family Wedding) ──
   "2026-05-29|L": {p:"J", orig:"C", notes:"Family Wedding (Jenny's request, accepted)"},
+  "2026-05-29|E": {p:"J", orig:"C", notes:"Family Wedding (Jenny's request, accepted)"},
   "2026-05-30|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-05-30|E": {p:"J", orig:"C", notes:"Family Wedding"},
   "2026-05-31|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-05-31|E": {p:"J", orig:"C", notes:"Family Wedding"},
   "2026-06-01|L": {p:"J", orig:"C", notes:"Family Wedding"},
-  "2026-06-02|L": {p:"J", orig:"C", notes:"Family Wedding"}
+  "2026-06-01|E": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-02|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-02|E": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-03|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-03|E": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-04|L": {p:"J", orig:"C", notes:"Family Wedding"},
+  "2026-06-04|E": {p:"J", orig:"C", notes:"Family Wedding"},
+  // ── Chris gets: Jun 22, 2026 (1 full day) ──
+  "2026-06-22|L": {p:"C", orig:"J", notes:"Exchange day (balancing Jenny's extra days)"},
+  "2026-06-22|E": {p:"C", orig:"J", notes:"Exchange day (balancing Jenny's extra days)"},
+  // ── Chris gets: Jul 30–Aug 4, 2027 (6 full days, Egypt trip) ──
+  "2027-07-30|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-07-30|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-07-31|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-07-31|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-01|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-01|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-02|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-02|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-03|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-03|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-04|L": {p:"C", orig:"J", notes:"Egypt trip"},
+  "2027-08-04|E": {p:"C", orig:"J", notes:"Egypt trip"},
+  // ── Chris gets: Jan 7, 2027 (1 full day) ──
+  "2027-01-07|L": {p:"C", orig:"J", notes:"Exchange day (balancing)"},
+  "2027-01-07|E": {p:"C", orig:"J", notes:"Exchange day (balancing)"},
+  // ── Chris gets: Jul 2–3 + Jul 6, 2027 (3 full days; Jul 4–5 covered by holiday) ──
+  "2027-07-02|L": {p:"C", orig:"J", notes:"July 4th extended exchange"},
+  "2027-07-02|E": {p:"C", orig:"J", notes:"July 4th extended exchange"},
+  "2027-07-03|L": {p:"C", orig:"J", notes:"July 4th extended exchange"},
+  "2027-07-03|E": {p:"C", orig:"J", notes:"July 4th extended exchange"},
+  "2027-07-06|L": {p:"C", orig:"J", notes:"July 4th extended exchange"},
+  "2027-07-06|E": {p:"C", orig:"J", notes:"July 4th extended exchange"}
 };
 
 // Requested events (overlay calendar)
 const EVENTS = [
+  {"name":"Swap: Exchange Days (Jenny)","startDate":"2026-04-06","endDate":"2026-04-09","status":"swap","requestedBy":"C","children":"Both","note":"4 days Chris offered to Jenny as part of 11-for-11 exchange agreement.","type":"SWAP"},
   {"name":"Luther: Orthodontist","startDate":"2026-05-05","endDate":"2026-05-05","status":"chris","requestedBy":"C","children":"Luther","note":"Shared in chat at 4:24 PM on 2026-03-10","time":"12:00 PM – 1:00 PM","type":"APPOINTMENT"},
-  {"name":"Swap: Family Wedding (Luther)","startDate":"2026-05-29","endDate":"2026-06-02","status":"swap","requestedBy":"J","children":"Luther (Elliot missing — disputed)","note":"Accepted 2026-03-11. Jenny requested for both boys but only Luther listed in AppClose. Chris flagged 2026-03-10.","type":"SWAP"},
+  {"name":"Swap: Family Wedding (Both)","startDate":"2026-05-29","endDate":"2026-06-04","status":"swap","requestedBy":"J","children":"Both","note":"7 days for Jenny. Part of 11-for-11 exchange agreement. Wedding.","type":"SWAP"},
   {"name":"New Life Ranch Summer Camp","startDate":"2026-06-07","endDate":"2026-06-13","status":"pending","requestedBy":"C","children":"Both","note":"Chris offered to cover full cost. Awaiting Jenny's confirmation.","type":"CAMP"},
-  {"name":"Dentist Appointment","startDate":"2026-11-03","endDate":"2026-11-03","status":"chris","requestedBy":"C","children":"Both","note":"Shared in chat at 7:33 AM on 2026-03-06","time":"3:30 PM – 4:30 PM","type":"APPOINTMENT"}
+  {"name":"Swap: Exchange Day (Chris)","startDate":"2026-06-22","endDate":"2026-06-22","status":"swap","requestedBy":"C","children":"Both","note":"1 day for Chris. Part of 11-for-11 exchange agreement.","type":"SWAP"},
+  {"name":"Swap: Egypt Trip (Chris)","startDate":"2027-07-30","endDate":"2027-08-04","status":"swap","requestedBy":"C","children":"Both","note":"6 days for Chris. Egypt trip. Part of 11-for-11 exchange agreement.","type":"SWAP"},
+  {"name":"Dentist Appointment","startDate":"2026-11-03","endDate":"2026-11-03","status":"chris","requestedBy":"C","children":"Both","note":"Shared in chat at 7:33 AM on 2026-03-06","time":"3:30 PM – 4:30 PM","type":"APPOINTMENT"},
+  {"name":"Swap: Exchange Day (Chris)","startDate":"2027-01-07","endDate":"2027-01-07","status":"swap","requestedBy":"C","children":"Both","note":"1 day for Chris. Part of 11-for-11 exchange agreement.","type":"SWAP"},
+  {"name":"Swap: July 4th Extended (Chris)","startDate":"2027-07-02","endDate":"2027-07-06","status":"swap","requestedBy":"C","children":"Both","note":"3 swap days (Jul 2-3, Jul 6) + Jul 4-5 holiday. Part of 11-for-11 exchange agreement.","type":"SWAP"}
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -851,41 +902,54 @@ function getSchoolStatus(dateStr, child) {
   return isSchoolDay(child, parseD(dateStr));
 }
 
-// Build holiday list for detail cards
-function buildHolidayList() {
+// Build holiday list — lazy per year
+const _holListCache = {};
+function getHolidayListForYear(y) {
+  if (_holListCache[y]) return _holListCache[y];
   const holidays = [];
   const seen = {};
-  for (let y = CAL_START.getFullYear(); y <= CAL_END.getFullYear(); y++) {
-    for (const ch of ['L', 'E']) {
-      for (const hol of getHolidays(ch, y)) {
-        const key = hol.h + '|' + dk(hol.s) + '|' + hol.p;
-        if (seen[key]) continue;
-        seen[key] = true;
-        const sD = parseD(dk(hol.s));
-        const eD = parseD(dk(hol.e));
-        const fmt = d => d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
-        const exStart = getExchange(dk(hol.s), 'L') || getExchange(dk(hol.s), 'E');
-        const exEnd = getExchange(dk(addDays(hol.e, 1)), 'L') || getExchange(dk(addDays(hol.e, 1)), 'E');
-        let startStr = fmt(sD);
-        if (exStart) startStr += (exStart.startsWith('at ') ? ' ' : ' at ') + exStart;
-        let endStr = fmt(eD);
-        if (exEnd) endStr += (exEnd.startsWith('at ') ? ' ' : ' at ') + exEnd;
-        holidays.push({
-          name: hol.note,
-          parent: hol.p,
-          startDate: dk(hol.s),
-          endDate: dk(hol.e),
-          startStr: startStr,
-          endStr: endStr
-        });
-      }
+  for (const ch of ['L', 'E']) {
+    for (const hol of getHolidays(ch, y)) {
+      const key = hol.h + '|' + dk(hol.s) + '|' + hol.p;
+      if (seen[key]) continue;
+      seen[key] = true;
+      const sD = parseD(dk(hol.s));
+      const eD = parseD(dk(hol.e));
+      const fmt = d => d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+      const exStart = getExchange(dk(hol.s), 'L') || getExchange(dk(hol.s), 'E');
+      const exEnd = getExchange(dk(addDays(hol.e, 1)), 'L') || getExchange(dk(addDays(hol.e, 1)), 'E');
+      let startStr = fmt(sD);
+      if (exStart) startStr += (exStart.startsWith('at ') ? ' ' : ' at ') + exStart;
+      let endStr = fmt(eD);
+      if (exEnd) endStr += (exEnd.startsWith('at ') ? ' ' : ' at ') + exEnd;
+      holidays.push({
+        name: hol.note,
+        parent: hol.p,
+        startDate: dk(hol.s),
+        endDate: dk(hol.e),
+        startStr: startStr,
+        endStr: endStr
+      });
     }
   }
   holidays.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  _holListCache[y] = holidays;
   return holidays;
 }
-
-const HOLIDAYS = buildHolidayList();
+// HOLIDAYS — returns list for a date range (used by overlay bars)
+function getHolidaysForRange(startDs, endDs) {
+  const y1 = parseInt(startDs.substring(0, 4));
+  const y2 = parseInt(endDs.substring(0, 4));
+  let all = [];
+  for (let y = y1; y <= y2; y++) all = all.concat(getHolidayListForYear(y));
+  return all;
+}
+// Legacy compat — HOLIDAYS used in holiday bar tooltip lookup
+const HOLIDAYS = { find: function(fn) {
+  // Search across rendered years
+  for (const y in _holListCache) { const r = _holListCache[y].find(fn); if (r) return r; }
+  return null;
+}};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CALENDAR RENDERING
@@ -921,12 +985,12 @@ function timeToSlice(timeStr) {
   return 0;
 }
 
-function buildCalendar() {
-  const body = document.getElementById('calBody');
-  let cM = CAL_START.getMonth(), cY = CAL_START.getFullYear();
-  let html = '';
+// ── Lazy calendar: render months on demand ──
+const _renderedMonths = {};  // "YYYY-MM" → true
+const LAZY_BATCH = 6;        // months to render ahead/behind viewport
 
-  while (cY < CAL_END.getFullYear() || (cY === CAL_END.getFullYear() && cM <= CAL_END.getMonth())) {
+function buildMonthHtml(cY, cM) {
+    let html = '';
     html += '<div class="month-section" id="m' + cY + '-' + String(cM).padStart(2,'0') + '">';
     html += '<div class="month-label">' + MONTHS[cM] + ' ' + cY + '</div>';
 
@@ -1326,10 +1390,117 @@ function buildCalendar() {
     }
 
     html += '</div>'; // end month-section
-    cM++;
-    if (cM > 11) { cM = 0; cY++; }
+
+    // Preload holiday cache for this year
+    getHolidayListForYear(cY);
+
+    return html;
+}
+
+function renderMonth(cY, cM) {
+  const key = cY + '-' + String(cM).padStart(2, '0');
+  if (_renderedMonths[key]) return;
+  _renderedMonths[key] = true;
+  const html = buildMonthHtml(cY, cM);
+  const body = document.getElementById('calBody');
+  // Insert in correct chronological position
+  const children = Array.from(body.children);
+  let inserted = false;
+  for (let i = 0; i < children.length; i++) {
+    const cid = children[i].id; // "mYYYY-MM"
+    if (cid && cid > 'm' + key) {
+      children[i].insertAdjacentHTML('beforebegin', html);
+      inserted = true;
+      break;
+    }
   }
-  body.innerHTML = html;
+  if (!inserted) body.insertAdjacentHTML('beforeend', html);
+  // Attach tap handlers to newly rendered bars
+  const section = document.getElementById('m' + key);
+  if (section) {
+    section.querySelectorAll('.hbar').forEach(function(bar) { attachTapHandler(bar, '.hbar-tooltip'); });
+    section.querySelectorAll('.cbar').forEach(function(bar) {
+      if (bar.querySelector('.cbar-tooltip')) attachTapHandler(bar, '.cbar-tooltip');
+    });
+  }
+}
+
+function renderMonthRange(startY, startM, endY, endM) {
+  let y = startY, m = startM;
+  while (y < endY || (y === endY && m <= endM)) {
+    if (y > CAL_END.getFullYear() || (y === CAL_END.getFullYear() && m > CAL_END.getMonth())) break;
+    if (y > CAL_START.getFullYear() || (y === CAL_START.getFullYear() && m >= CAL_START.getMonth())) {
+      renderMonth(y, m);
+    }
+    m++;
+    if (m > 11) { m = 0; y++; }
+  }
+}
+
+function buildCalendar() {
+  // Render a window around today: ±LAZY_BATCH months
+  const now = new Date();
+  let startM = now.getMonth() - LAZY_BATCH;
+  let startY = now.getFullYear();
+  while (startM < 0) { startM += 12; startY--; }
+  let endM = now.getMonth() + LAZY_BATCH;
+  let endY = now.getFullYear();
+  while (endM > 11) { endM -= 12; endY++; }
+  renderMonthRange(startY, startM, endY, endM);
+
+  // IntersectionObserver: load more months when user scrolls near edges
+  setupLazyScroll();
+}
+
+function setupLazyScroll() {
+  let loading = false;
+  const body = document.getElementById('calBody');
+  const observer = new IntersectionObserver(function(entries) {
+    if (loading) return;
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      loading = true;
+      const id = entry.target.id; // "mYYYY-MM"
+      const parts = id.substring(1).split('-');
+      const y = parseInt(parts[0]), m = parseInt(parts[1]);
+      // Is this the first or last rendered month? Load more in that direction
+      const keys = Object.keys(_renderedMonths).sort();
+      const key = y + '-' + String(m).padStart(2, '0');
+      if (key <= keys[1]) {
+        // Near top — load earlier months
+        let eY = y, eM = m - 1;
+        if (eM < 0) { eM = 11; eY--; }
+        let sY = eY, sM = eM - LAZY_BATCH + 1;
+        while (sM < 0) { sM += 12; sY--; }
+        renderMonthRange(sY, sM, eY, eM);
+      }
+      if (key >= keys[keys.length - 2]) {
+        // Near bottom — load later months
+        let sY = y, sM = m + 1;
+        if (sM > 11) { sM = 0; sY++; }
+        let eY = sY, eM = sM + LAZY_BATCH - 1;
+        while (eM > 11) { eM -= 12; eY++; }
+        renderMonthRange(sY, sM, eY, eM);
+      }
+      fixStickyOffsets();
+      // Re-observe new edge months
+      observeEdges();
+      loading = false;
+      break;
+    }
+  }, { rootMargin: '400px' });
+
+  function observeEdges() {
+    observer.disconnect();
+    const sections = body.querySelectorAll('.month-section');
+    if (sections.length >= 2) {
+      observer.observe(sections[0]);
+      observer.observe(sections[1]);
+      observer.observe(sections[sections.length - 1]);
+      observer.observe(sections[sections.length - 2]);
+    }
+  }
+  observeEdges();
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1386,70 +1557,55 @@ window.addEventListener('resize', fixStickyOffsets);
 setTimeout(scrollToToday, 100);
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// TOUCH / TAP TOOLTIP SUPPORT
+// TOUCH / TAP TOOLTIP SUPPORT (global — used by lazy loader)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-(function() {
-  const backdrop = document.getElementById('tooltipBackdrop');
-  let activeBar = null;
+var _activeBar = null;
+var _backdrop = document.getElementById('tooltipBackdrop');
 
-  function dismissTooltip() {
-    if (activeBar) {
-      activeBar.classList.remove('tooltip-active');
-      activeBar = null;
-    }
-    backdrop.classList.remove('active');
+function dismissTooltip() {
+  if (_activeBar) {
+    _activeBar.classList.remove('tooltip-active');
+    _activeBar = null;
   }
+  _backdrop.classList.remove('active');
+}
 
-  function attachTapHandler(bar, tipSelector) {
-    bar.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (activeBar === bar) { dismissTooltip(); return; }
-      dismissTooltip();
-      bar.classList.add('tooltip-active');
-      activeBar = bar;
-      backdrop.classList.add('active');
+function attachTapHandler(bar, tipSelector) {
+  bar.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (_activeBar === bar) { dismissTooltip(); return; }
+    dismissTooltip();
+    bar.classList.add('tooltip-active');
+    _activeBar = bar;
+    _backdrop.classList.add('active');
 
-      // Keep tooltip in viewport
-      var tip = bar.querySelector(tipSelector);
-      if (tip) {
-        tip.style.left = '';
-        tip.style.right = '';
-        tip.style.transform = '';
-        tip.style.bottom = '';
-        tip.style.top = '';
-        requestAnimationFrame(function() {
-          var r = tip.getBoundingClientRect();
-          if (r.left < 8) { tip.style.left = '0'; tip.style.transform = 'none'; }
-          else if (r.right > window.innerWidth - 8) { tip.style.left = 'auto'; tip.style.right = '0'; tip.style.transform = 'none'; }
-          if (r.top < 0) { tip.style.bottom = 'auto'; tip.style.top = 'calc(100% + 8px)'; }
-        });
-      }
-    });
-  }
-
-  // Holiday bars
-  document.querySelectorAll('.hbar').forEach(function(bar) {
-    attachTapHandler(bar, '.hbar-tooltip');
-  });
-
-  // Custody bars (mobile only — show pickup times)
-  document.querySelectorAll('.cbar').forEach(function(bar) {
-    if (bar.querySelector('.cbar-tooltip')) {
-      attachTapHandler(bar, '.cbar-tooltip');
+    var tip = bar.querySelector(tipSelector);
+    if (tip) {
+      tip.style.left = '';
+      tip.style.right = '';
+      tip.style.transform = '';
+      tip.style.bottom = '';
+      tip.style.top = '';
+      requestAnimationFrame(function() {
+        var r = tip.getBoundingClientRect();
+        if (r.left < 8) { tip.style.left = '0'; tip.style.transform = 'none'; }
+        else if (r.right > window.innerWidth - 8) { tip.style.left = 'auto'; tip.style.right = '0'; tip.style.transform = 'none'; }
+        if (r.top < 0) { tip.style.bottom = 'auto'; tip.style.top = 'calc(100% + 8px)'; }
+      });
     }
   });
+}
 
-  backdrop.addEventListener('click', dismissTooltip);
-  document.addEventListener('click', function(e) {
-    if (activeBar && !activeBar.contains(e.target)) dismissTooltip();
-  });
+_backdrop.addEventListener('click', dismissTooltip);
+document.addEventListener('click', function(e) {
+  if (_activeBar && !_activeBar.contains(e.target)) dismissTooltip();
+});
 
-  // Mobile auto-zoom: no auto-zoom, let user control (bars are bigger now)
-  if (window.innerWidth < 500) {
-    currentZoom = 100;
-    applyZoom();
-  }
-})();
+// Mobile auto-zoom
+if (window.innerWidth < 500) {
+  currentZoom = 100;
+  applyZoom();
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SERVICE WORKER REGISTRATION
